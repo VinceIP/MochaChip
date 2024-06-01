@@ -2,6 +2,7 @@ public class Memory {
     //Chip-8 has direct access to up to 4KB of RAM
 
     byte[] memory;
+    final int firstAvailableAddress = 0x200;
     private final byte[] fontData = {
             (byte) 0xF0, (byte) 0x90, (byte) 0x90, (byte) 0x90, (byte) 0xF0, // 0
             (byte) 0x20, (byte) 0x60, (byte) 0x20, (byte) 0x20, (byte) 0x70, // 1
@@ -27,7 +28,7 @@ public class Memory {
         memory = new byte[4096];
         reserveMemoryForInterpreter();
         loadFontToMemory();
-        printMemoryMap();
+        //printMemoryMap();
     }
 
     public void write(int address, byte value) {
@@ -39,7 +40,7 @@ public class Memory {
         }
     }
 
-    public byte readByte(int address) {
+    public byte read(int address) {
         if (address >= 0 && address < memory.length) {
             return memory[address];
         } else {
@@ -51,7 +52,7 @@ public class Memory {
     private void reserveMemoryForInterpreter() {
         //Set each byte up to F11 to a non-zero value to reserve it for the Chip-8 interpreter
         //This is not needed at all, just for me for now
-        for (int i = 0x0; i < 0x1FF; i++) {
+        for (int i = 0x0; i < firstAvailableAddress; i++) {
             write(i, (byte) 0x5);
         }
     }
@@ -61,7 +62,6 @@ public class Memory {
         //5 bytes per char
         int startAddress = 0x50;
         for (int i = 0; i < fontData.length; i++) {
-            System.out.println("Writing font data to memory at " + (startAddress + i) + " with value " + String.format("%02X", fontData[i]));
             write(startAddress + i, fontData[i]);
         }
     }
