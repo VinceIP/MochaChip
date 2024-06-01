@@ -8,6 +8,7 @@
     <artifactId>Chip8Emulator</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -21,8 +22,14 @@
             <version>5.7.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.14.0</version>
+        </dependency>
 
     </dependencies>
+
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

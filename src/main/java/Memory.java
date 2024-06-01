@@ -1,3 +1,6 @@
+import java.io.IOException;
+import java.io.InputStream;
+
 public class Memory {
     //Chip-8 has direct access to up to 4KB of RAM
 
@@ -63,6 +66,26 @@ public class Memory {
         int startAddress = 0x50;
         for (int i = 0; i < fontData.length; i++) {
             write(startAddress + i, fontData[i]);
+        }
+    }
+
+    public void loadChip8File() {
+        try(InputStream inputStream = getClass().getClassLoader().getResourceAsStream("test/danm8ku.ch8");){
+            assert inputStream != null;
+            byte[] buffer = new byte[inputStream.available()];
+            inputStream.read(buffer);
+            loadProgramDataToMemory(buffer);
+            System.out.println("Data loaded. Here's the map: ");
+            printMemoryMap();
+
+        } catch (IOException e){
+            System.out.println("Couldn't find Chip 8 ROM.");
+        }
+    }
+
+    public void loadProgramDataToMemory(byte[] data){
+        for (int i = 0; i < data.length; i++) {
+            write(firstAvailableAddress + i, data[i]);
         }
     }
 
