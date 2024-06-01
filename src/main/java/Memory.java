@@ -26,12 +26,13 @@ public class Memory {
     };
 
     public Memory() {
-        System.out.println("Initiating memory.");
-        //4 kilobytes of memory represented as a Byte array
         memory = new byte[4096];
+    }
+
+    public void initialize() {
+        //System.out.println("Initializing memory.");
         reserveMemoryForInterpreter();
         loadFontToMemory();
-        //printMemoryMap();
     }
 
     public void write(int address, byte value) {
@@ -53,16 +54,12 @@ public class Memory {
     }
 
     private void reserveMemoryForInterpreter() {
-        //Set each byte up to F11 to a non-zero value to reserve it for the Chip-8 interpreter
-        //This is not needed at all, just for me for now
         for (int i = 0x0; i < firstAvailableAddress; i++) {
             write(i, (byte) 0x5);
         }
     }
 
     private void loadFontToMemory() {
-        //050–09F
-        //5 bytes per char
         int startAddress = 0x50;
         for (int i = 0; i < fontData.length; i++) {
             write(startAddress + i, fontData[i]);
@@ -70,29 +67,29 @@ public class Memory {
     }
 
     public void loadChip8File() {
-        try(InputStream inputStream = getClass().getClassLoader().getResourceAsStream("test/danm8ku.ch8");){
-            assert inputStream != null;
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("test/chip8logo.ch8")) {
+            if (inputStream == null) {
+                throw new IOException("Chip 8 ROM not found in resources folder.");
+            }
             byte[] buffer = new byte[inputStream.available()];
             inputStream.read(buffer);
             loadProgramDataToMemory(buffer);
-            System.out.println("Data loaded. Here's the map: ");
-            printMemoryMap();
-
-        } catch (IOException e){
-            System.out.println("Couldn't find Chip 8 ROM.");
+            System.out.println("Data loaded. Here's the map:");
+            //printMemoryMap(0x200, 0x210);
+        } catch (IOException e) {
+            System.out.println("Couldn't load Chip 8 ROM: " + e.getMessage());
         }
     }
 
-    public void loadProgramDataToMemory(byte[] data){
+    public void loadProgramDataToMemory(byte[] data) {
         for (int i = 0; i < data.length; i++) {
             write(firstAvailableAddress + i, data[i]);
         }
     }
 
-    private void printMemoryMap() {
-        for (int i = 0; i < memory.length; i++) {
-            if (i % 40 == 0) System.out.print("\n");
-            System.out.print(String.format("%02X ", memory[i]));
+    public void printMemoryMap() {
+        for (int i = 0; i <= 4096; i++) {
+            System.out.printf("Memory at 0x%X: 0x%02X%n", i, memory[i] & 0xFF);
         }
     }
 

@@ -7,10 +7,15 @@ public class Registers {
 
     byte delayTimer;
     byte soundTimer;
+    int indexRegister;
+    Stack stack;
+    byte[] variableRegisters;
 
     public Registers(){
         delayTimer = 0;
         soundTimer = 0;
+        indexRegister = 0x00;
+        variableRegisters = new byte[16];
     }
 
     //Called 60 times per second
