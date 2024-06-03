@@ -1,3 +1,5 @@
+import java.util.concurrent.ThreadLocalRandom;
+
 public class CPU {
     //handles all CPU operations
     Memory memory;
@@ -21,7 +23,7 @@ public class CPU {
     public void start() {
         memory.initialize();
         memory.loadChip8File();
-        long delay = 30; //Delay in ms - roughly 60hz
+        long delay = 16; //Delay in ms - roughly 60hz
         while (true) {
             cycle();
             try {
@@ -164,24 +166,84 @@ public class CPU {
                     //8xy6 SHR Vx {, Vy} - Set Vx = Vx SHR 1 (shift right)
                     // If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
                 } else if (nStr.equals("6")) {
+                    //Store least significant bit in carry flag
+                    registers.variableRegisters[0xF] = (byte) (registers.variableRegisters[x] & 0x01);
+                    registers.variableRegisters[x] = (byte) ((registers.variableRegisters[x] & 0xFF) >> 1);
 
+                    // 8xy7 SUBN Vx, Vy - Set Vx = Vy - Vx
+                    // If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
                 } else if (nStr.equals("7")) {
+                    if (registers.variableRegisters[y] > registers.variableRegisters[x])
+                        registers.variableRegisters[0xF] = 1;
+                    else registers.variableRegisters[0xF] = 0;
+                    int difference = (registers.variableRegisters[y] & 0xFF) - (registers.variableRegisters[x] & 0xFF);
+                    registers.variableRegisters[x] = (byte) difference;
 
                 } else if (nStr.equals("E")) {
-
+                    //Store most significant bit in carry flag
+                    registers.variableRegisters[0xF] = (byte) ((registers.variableRegisters[x] & 0x80) >> 7);
+                    registers.variableRegisters[x] = (byte) ((registers.variableRegisters[x] & 0xFF) << 1);
                 }
                 break;
+
             //9xy0 SNE Vx, Vy - Skip next  instruction if Vx != Vy
             case "9":
                 if (registers.variableRegisters[x] != registers.variableRegisters[y]) programCounter.incrementPC();
                 break;
-            //Set index - sets I to nnn
+
+            // Annn LD I, addr - Set I to nnn
             case "A":
                 registers.indexRegister = nnn;
                 break;
+
+            // Bnnn JP V0, addr - Jump to location nnn + V0
+            case "B":
+                programCounter.jump(nnn + registers.variableRegisters[0x0]);
+                break;
+
+            // Cxnn RND Vx, byte - Set Vx = random byte AND nn
+            case "C":
+                registers.variableRegisters[x] = (byte) ((byte) ((byte) ThreadLocalRandom.current().nextInt(0, 255) & 0xFF) & nn);
+                break;
+
             //Draw
             case "D":
                 drawSprite(x, y, n);
+                break;
+
+            case "F":
+                // Fx07 LD Vx, DT - Set Vx = delay timer value
+                if (nnStr.equals("07")) {
+                    registers.variableRegisters[x] = registers.delayTimer;
+
+                    // Fx0A LD Vx, K - Wait for key press, store value of key in Vx
+                } else if (nnStr.equals("0A")) {
+
+                    // Fx15 LD DT, Vx - Set delay timer = Vx
+                } else if (nnStr.equals("15")) {
+                    registers.delayTimer = registers.variableRegisters[x];
+
+                    // Fx18 LD ST, Vx - Set sound timer = Vx
+                } else if (nnStr.equals("18")) {
+                    registers.soundTimer = registers.variableRegisters[x];
+
+                    // Fx1E ADD I, Vx - Set I = I + Vx
+                } else if (nnStr.equals("1E")) {
+                    registers.indexRegister += registers.variableRegisters[x];
+
+                    // Fx29 LD F, Vx - Set I = location of sprite digit Vx
+                } else if (nnStr.equals("29")) {
+
+                    //
+                } else if (nnStr.equals("33")) {
+
+                    //
+                } else if (nnStr.equals("55")) {
+
+                    //
+                } else if (nnStr.equals("65")) {
+
+                }
                 break;
             default:
                 throw new OpcodeUnimplementedException(instruction);
