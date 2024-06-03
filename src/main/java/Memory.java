@@ -67,7 +67,7 @@ public class Memory {
     }
 
     public void loadChip8File() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("test/chip8logo.ch8")) {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("test/opcodetest.ch8")) {
             if (inputStream == null) {
                 throw new IOException("Chip 8 ROM not found in resources folder.");
             }
