@@ -23,7 +23,7 @@ public class CPU {
     public void start() {
         memory.initialize();
         memory.loadChip8File();
-        long delay = 16; //Delay in ms - roughly 60hz
+        long delay = 3; //Delay in ms - roughly 60hz
         while (true) {
             cycle();
             try {
@@ -72,7 +72,7 @@ public class CPU {
         byte nn = (byte) (Integer.parseInt(nnStr, 16) & 0xFF); //8 bits, cast to unsigned byte
         int nnn = Integer.parseInt(nnnStr, 16); ///nnn is probably 12 bits, so an int is needed
 
-        System.out.println("Decoding instruction: " + String.format("%04X", instruction) + " at PC: " + String.format("%04X", programCounter.getCurrentAddress()));
+        //System.out.println("Decoding instruction: " + String.format("%04X", instruction) + " at PC: " + String.format("%04X", programCounter.getCurrentAddress()));
 
         switch (opCode) {
 
@@ -120,15 +120,16 @@ public class CPU {
                 if (registers.variableRegisters[x] == registers.variableRegisters[y]) {
                     programCounter.incrementPC();
                 }
+                break;
 
-                //6xnn LD Vx, byte - Puts value of nn into Vx
+            //6xnn LD Vx, byte - Puts value of nn into Vx
             case "6":
-                registers.variableRegisters[x] = nn;
+                registers.variableRegisters[x] = (byte) (nn & 0xFF);
                 break;
 
             //7xnn ADD Vx, byte - Set Vx = Vx + nn
             case "7":
-                registers.variableRegisters[x] += nn;
+                registers.variableRegisters[x] += (byte) (nn & 0xFF);
                 break;
 
             case "8":
@@ -233,16 +234,43 @@ public class CPU {
 
                     // Fx29 LD F, Vx - Set I = location of sprite digit Vx
                 } else if (nnStr.equals("29")) {
+                    registers.indexRegister = memory.getAddressOfDigit(registers.variableRegisters[x]);
 
-                    //
+                    //Fx33 LD B, Vx
+                    //Store binary-coded decimal representation of Vx in memory locations I, I+1, and I+2.
+                    //The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
                 } else if (nnStr.equals("33")) {
+                    int dec = registers.variableRegisters[x] & 0xFF;
+                    int hundreds = dec / 100;
+                    int tens = (dec / 10) % 10;
+                    int ones = dec % 10;
+                    System.out.printf("Storing BCD of %d: [%d, %d, %d] at addresses I=%04X, I+1=%04X, I+2=%04X%n",
+                            dec, hundreds, tens, ones, registers.indexRegister, registers.indexRegister + 1, registers.indexRegister + 2);
+                    memory.write(registers.indexRegister, (byte) hundreds); // Hundreds place
+                    memory.write(registers.indexRegister + 1, (byte) tens); // Tens place
+                    memory.write(registers.indexRegister + 2, (byte) ones); // Ones place
 
-                    //
+                    //Fx55 LD [I], Vx
+                    //Store registers V0 through Vx in memory starting at location I.
+                    //The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
                 } else if (nnStr.equals("55")) {
+                    if (x == 0) memory.write(registers.indexRegister, registers.variableRegisters[0]);
+                    else {
+                        for (int i = 0; i <= x; i++) {
+                            memory.write(registers.indexRegister + i, registers.variableRegisters[i]);
+                        }
+                    }
 
-                    //
+                    //Fx65 - LD Vx, [I]
+                    //Read registers V0 through Vx from memory starting at location I.
+                    //The interpreter reads values from memory starting at location I into registers V0 through Vx.
                 } else if (nnStr.equals("65")) {
-
+                    if (x == 0) registers.variableRegisters[0] = memory.read(registers.indexRegister);
+                    else {
+                        for (int i = 0; i <= x; i++) {
+                            registers.variableRegisters[i] = memory.read(registers.indexRegister + i);
+                        }
+                    }
                 }
                 break;
             default:

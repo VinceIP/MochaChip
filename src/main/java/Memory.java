@@ -6,6 +6,7 @@ public class Memory {
 
     byte[] memory;
     final int firstAvailableAddress = 0x200;
+    final int fontDataAddress = 0x50;
     private final byte[] fontData = {
             (byte) 0xF0, (byte) 0x90, (byte) 0x90, (byte) 0x90, (byte) 0xF0, // 0
             (byte) 0x20, (byte) 0x60, (byte) 0x20, (byte) 0x20, (byte) 0x70, // 1
@@ -36,6 +37,7 @@ public class Memory {
     }
 
     public void write(int address, byte value) {
+        value = unsignByte(value);
         if (address >= 0 && address < memory.length) {
             memory[address] = value;
         } else {
@@ -60,14 +62,13 @@ public class Memory {
     }
 
     private void loadFontToMemory() {
-        int startAddress = 0x50;
         for (int i = 0; i < fontData.length; i++) {
-            write(startAddress + i, fontData[i]);
+            write(fontDataAddress + i, fontData[i]);
         }
     }
 
     public void loadChip8File() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("test/opcodetest.ch8")) {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("test/octojam6title.ch8")) {
             if (inputStream == null) {
                 throw new IOException("Chip 8 ROM not found in resources folder.");
             }
@@ -93,7 +94,12 @@ public class Memory {
         }
     }
 
-    public static int unsignedToBytes(byte b) {
-        return b & 0xFF;
+    //Return an address in memory corresponding to a hex digit
+    public int getAddressOfDigit(int digit) {
+        return fontDataAddress + (digit * 5);
+    }
+
+    public static byte unsignByte(byte b) {
+        return (byte) (b & 0xFF);
     }
 }
