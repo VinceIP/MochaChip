@@ -3,13 +3,19 @@ import java.awt.event.KeyListener;
 
 public class Input implements KeyListener {
     boolean[] keys;
+    CPU cpu;
 
-    public Input(){
-        keys = new boolean[16];
+
+    int lastKeyPressed = 16;
+
+    public Input(CPU cpu) {
+        this.cpu = cpu;
+        keys = new boolean[17];
     }
 
     public void pressKey(int key) {
         keys[key] = true;
+        lastKeyPressed = key;
     }
 
     public void releaseKey(int key) {
@@ -27,7 +33,7 @@ public class Input implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-          //
+        //
     }
 
     @Override
@@ -62,8 +68,24 @@ public class Input implements KeyListener {
             case KeyEvent.VK_X -> 0x0;
             case KeyEvent.VK_C -> 0xB;
             case KeyEvent.VK_V -> 0xF;
-            default -> -1;
+            //Any other key is not valid, set it to the top of the array
+            default -> 16;
         };
+    }
+
+    public int getLastKeyPressed() {
+        return lastKeyPressed;
+    }
+
+    public void resetLastKeyPressed() {
+        this.lastKeyPressed = 16;
+    }
+
+    public boolean isAnyKeyPressed() {
+        for (boolean key : keys) {
+            if (key) return true;
+        }
+        return false;
     }
 
 }

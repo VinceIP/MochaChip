@@ -2,11 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Display {
-    private JFrame frame;
-    private DisplayPanel panel;
-    private final int displayWidth = 64;
-    private final int displayHeight = 32;
+    JFrame frame;
+    DisplayPanel panel;
+    final int displayWidth = 64;
+    final int displayHeight = 32;
     boolean[][] display;
+    public Input input;
 
     public Display() {
         display = new boolean[displayWidth][displayHeight];
@@ -20,6 +21,7 @@ public class Display {
             frame.setSize(displayWidth * 14 + 30, displayHeight * 14 +30); // Scale size
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setVisible(true);
+            frame.addKeyListener(input);
         });
     }
 
