@@ -139,52 +139,65 @@ public class CPU {
 
                     // 8xy1 OR Vx, Vy - Set Vx = Vx OR Vy
                 } else if (nStr.equals("1")) {
-                    registers.variableRegisters[x] = (byte) ((byte) ((registers.variableRegisters[x] | registers.variableRegisters[y])) & 0xFF);
+                    registers.variableRegisters[x] = (byte) (registers.variableRegisters[x] | registers.variableRegisters[y]);
 
                     //8xy2 AND Vx, Vy - Set Vx = Vx & Vy
                 } else if (nStr.equals("2")) {
-                    registers.variableRegisters[x] = (byte) ((byte) ((registers.variableRegisters[x] & registers.variableRegisters[y])) & 0xFF);
+                    registers.variableRegisters[x] = (byte) (registers.variableRegisters[x] & registers.variableRegisters[y]);
 
                     // 8xy3 XOR Vx, Vy - Set Vx = Vx ^ Vy
                 } else if (nStr.equals("3")) {
-                    registers.variableRegisters[x] = (byte) ((byte) ((registers.variableRegisters[x] ^ registers.variableRegisters[y])) & 0xFF);
+                    registers.variableRegisters[x] = (byte) (registers.variableRegisters[x] ^ registers.variableRegisters[y]);
 
                     //8xy4 ADD Vx, Vy - Set Vx - Vx + Vy, set VF carry
                 } else if (nStr.equals("4")) {
-                    int sum = (registers.variableRegisters[x] & 0xFF) + (registers.variableRegisters[y] & 0xFF);
-                    if (sum > 255) registers.variableRegisters[0xF] = 1;
-                    else registers.variableRegisters[0xF] = 0;
-                    registers.variableRegisters[x] = (byte) sum;
+                    byte result = (byte) (registers.variableRegisters[x] + registers.variableRegisters[y]);
+                    int iResult = (result & 0xFF);
+                    int vx = registers.variableRegisters[x] & 0xFF;
+                    int vy = registers.variableRegisters[y] & 0xFF;
+                    if(iResult < vx || iResult < vy){
+                        registers.variableRegisters[0xF] = 0x1;
+                    } else{
+                        registers.variableRegisters[0xF] = 0x0;
+                    }
+                    registers.variableRegisters[x] = result;
+
+                    System.out.println("Sum: " + (vx + vy));
+                    System.out.println("Sum in memory:" + (registers.variableRegisters[x] & 0xFF));
 
                     // 8xy5 SUB Vx, Vy - Set Vx = Vx - Vy
                 } else if (nStr.equals("5")) {
-                    if (registers.variableRegisters[x] > registers.variableRegisters[y])
-                        registers.variableRegisters[0xF] = 1;
-                    else registers.variableRegisters[0xF] = 0;
-                    int difference = (registers.variableRegisters[x] & 0xFF) - (registers.variableRegisters[y] & 0xFF);
-                    registers.variableRegisters[x] = (byte) difference;
+                    //If this calculation will underflow, set carry flag - clear it if not
+                    registers.variableRegisters[0xF] = (byte) (registers.variableRegisters[x] > registers.variableRegisters[y] ? 1 : 0);
+                    registers.variableRegisters[x] = (byte) ((registers.variableRegisters[x] - registers.variableRegisters[y]) & 0xFF);
 
                     //8xy6 SHR Vx {, Vy} - Set Vx = Vx SHR 1 (shift right)
                     // If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
                 } else if (nStr.equals("6")) {
-                    //Store least significant bit in carry flag
+                    // Store the least significant bit in carry flag (VF)
                     registers.variableRegisters[0xF] = (byte) (registers.variableRegisters[x] & 0x01);
+                    // Shift Vx right by one bit
                     registers.variableRegisters[x] = (byte) ((registers.variableRegisters[x] & 0xFF) >> 1);
 
                     // 8xy7 SUBN Vx, Vy - Set Vx = Vy - Vx
                     // If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
                 } else if (nStr.equals("7")) {
-                    if (registers.variableRegisters[y] > registers.variableRegisters[x])
-                        registers.variableRegisters[0xF] = 1;
-                    else registers.variableRegisters[0xF] = 0;
-                    int difference = (registers.variableRegisters[y] & 0xFF) - (registers.variableRegisters[x] & 0xFF);
-                    registers.variableRegisters[x] = (byte) difference;
+                    int vx = registers.variableRegisters[x] & 0xFF;
+                    int vy = registers.variableRegisters[y] & 0xFF;
+                    registers.variableRegisters[0xF] = (byte) (vy > vx ? 1 : 0); // Set VF to 1 if no borrow
+                    int difference = vy - vx;
+                    registers.variableRegisters[x] = (byte) (difference & 0xFF); // Ensure result is within 8 bit
 
+                    //8xyE SHL Vx {, Vy}
+                    //Set Vx = Vx SHL 1.
+                    //If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
                 } else if (nStr.equals("E")) {
-                    //Store most significant bit in carry flag
+                    // Store the most significant bit in carry flag (VF)
                     registers.variableRegisters[0xF] = (byte) ((registers.variableRegisters[x] & 0x80) >> 7);
-                    registers.variableRegisters[x] = (byte) ((registers.variableRegisters[x] & 0xFF) << 1);
+                    // Shift Vx left by one bit and mask to 8 bits
+                    registers.variableRegisters[x] = (byte) ((registers.variableRegisters[x] << 1) & 0xFF);
                 }
+
                 break;
 
             //9xy0 SNE Vx, Vy - Skip next  instruction if Vx != Vy
