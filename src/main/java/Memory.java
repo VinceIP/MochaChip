@@ -4,6 +4,9 @@ import java.io.InputStream;
 
 public class Memory {
     //Chip-8 has direct access to up to 4KB of RAM
+    private static final int MEMORY_SIZE = 4096;
+    private static final int FONT_DATA_START_ADDRESS = 0x50;
+    private static final int PROGRAM_START_ADDRESS = 0x200;
 
     byte[] memory;
     final int firstAvailableAddress = 0x200;
@@ -38,14 +41,15 @@ public class Memory {
     }
 
     public void reset() {
-        memory = new byte[4096];
+        memory = new byte[MEMORY_SIZE];
         initialize();
     }
 
     public void write(int address, byte value) {
-        value = unsignByte(value);
-        if (address >= 0 && address < memory.length) {
-            memory[address] = value;
+        byte val = (byte) (value & 0xFF);
+        if (address >= 0 && address < MEMORY_SIZE) {
+            memory[address] = val;
+            //System.out.printf("Memory write at 0x%X: 0x%02X%n", address, value & 0xFF);
         } else {
             throw new IllegalArgumentException("Error with request to write memory at " + address
                     + " with value " + value + ". Memory address out of bounds.");
@@ -54,7 +58,7 @@ public class Memory {
 
     public byte read(int address) {
         if (address >= 0 && address < memory.length) {
-            return memory[address];
+            return (byte) (memory[address] & 0xFF);
         } else {
             throw new IllegalArgumentException("Error with request to read memory at " + address
                     + ". Memory address out of bounds.");
@@ -69,17 +73,25 @@ public class Memory {
 
     private void loadFontToMemory() {
         for (int i = 0; i < fontData.length; i++) {
-            write(fontDataAddress + i, fontData[i]);
+            write(FONT_DATA_START_ADDRESS + i, fontData[i]);
+        }
+        //System.out.println("Font data loaded into memory:");
+        for (int i = 0; i < fontData.length; i++) {
+            //System.out.printf("Memory at 0x%X: 0x%02X%n", fontDataAddress + i, memory[fontDataAddress + i] & 0xFF);
         }
     }
 
     public boolean loadChip8File(String filePath) {
+        reset();
         try (InputStream inputStream = new FileInputStream(filePath)) {
             byte[] buffer = new byte[inputStream.available()];
+            int bytesRead = inputStream.read(buffer);
+            if (bytesRead != buffer.length) {
+                System.out.println("Warning: Could not read the entire file");
+            }
             inputStream.read(buffer);
             loadProgramDataToMemory(buffer);
-            System.out.println("Data loaded. Here's the map:");
-            //printMemoryMap(0x200, 0x210);
+            printMemoryMap();
             return true;
         } catch (IOException e) {
             System.out.println("Couldn't load Chip 8 ROM: " + e.getMessage());
@@ -88,20 +100,25 @@ public class Memory {
     }
 
     public void loadProgramDataToMemory(byte[] data) {
-        for (int i = 0; i < data.length; i++) {
-            write(firstAvailableAddress + i, data[i]);
-        }
+        System.arraycopy(data, 0, memory, PROGRAM_START_ADDRESS, data.length);
+        //System.out.println("Program data loaded into memory:");
+//        for (int i = 0; i < data.length; i++) {
+//            System.out.printf("Memory at 0x%X: 0x%02X%n", PROGRAM_START_ADDRESS + i, memory[PROGRAM_START_ADDRESS + i] & 0xFF);
+//        }
     }
 
     public void printMemoryMap() {
-        for (int i = 0; i <= 4096; i++) {
-            System.out.printf("Memory at 0x%X: 0x%02X%n", i, memory[i] & 0xFF);
+        for (int i = 0; i < 4096; i++) {
+            if (i % 10 == 0) {
+                System.out.printf("%nAddress 0x%03X: ", i);
+            }
+            System.out.printf("0x%02X ", memory[i] & 0xFF);
         }
     }
 
     //Return an address in memory corresponding to a hex digit
     public int getAddressOfDigit(int digit) {
-        return fontDataAddress + (digit * 5);
+        return FONT_DATA_START_ADDRESS + (digit * 5);
     }
 
     public static byte unsignByte(byte b) {

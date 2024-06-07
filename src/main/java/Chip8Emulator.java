@@ -147,7 +147,7 @@ public class Chip8Emulator extends JFrame {
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             lastPathUsed = fileChooser.getCurrentDirectory().getAbsolutePath();
             String filePath = fileChooser.getSelectedFile().getAbsolutePath();
-            System.out.println("Path: " + filePath);
+            //System.out.println("Path: " + filePath);
             stopEmulation();
             display.reset();
             input.reset();
@@ -202,7 +202,7 @@ public class Chip8Emulator extends JFrame {
     }
 
     public static void main(String[] args) {
-        System.out.println("Hello, world. Starting Chip-8");
+        //System.out.println("Hello, world. Starting Chip-8");
         SwingUtilities.invokeLater(() -> {
             FlatDarkLaf.setup();
             UIManager.put("MenuBar.background", UIManager.getColor("Panel.background"));

@@ -20,7 +20,7 @@ public class CPU {
 
     public void start() {
         running = true;
-        long delay = 2; //Delay in ms - roughly 60hz
+        long delay = 1; //Delay in ms - roughly 60hz
         while (running) {
             registers.update();
             if (!waitingForKeyPress) cycle();
@@ -177,7 +177,7 @@ public class CPU {
 
                     // 8xy5 SUB Vx, Vy - Set Vx = Vx - Vy
                 } else if (nStr.equals("5")) {
-                    System.out.println("Instr: " + instrStr);
+                    //System.out.println("Instr: " + instrStr);
                     subWithCarry(x, y);
 
                     //8xy6 SHR Vx {, Vy} - Set Vx = Vx SHR 1 (shift right)
@@ -311,34 +311,26 @@ public class CPU {
     }
 
     //Draw sprite at x, y, with height n
-    public void draw(int x, int y, int n) {
-        //System.out.println("Draw sprite at V" + x + ", V" + y + " at height " + n);
-        int vx = ((registers.variableRegisters[x] & 0xFF) % 64) & 0xFF;
-        int vy = ((registers.variableRegisters[y] & 0xFF) % 64) & 0xFF;
-        registers.variableRegisters[0xF] = 0x0;
-        //for n rows
-        for (int i = 0; i < n; i++) {
-            int spriteData = memory.read(registers.indexRegister + i);
-            //for each 8 pixels/bits in a row
-            for (int j = 0; j < 8; j++) {
-                //is this bit set?
-                if ((spriteData & (0x80 >> j)) != 0) {
-                    int displayX = (vx + j) % 64;
-                    int displayY = (vy + i) % 32;
-
+    public void draw(int x, int y, int height) {
+        int vx = registers.variableRegisters[x] & 0xFF;
+        int vy = registers.variableRegisters[y] & 0xFF;
+        registers.variableRegisters[0xF] = 0;
+        for (int row = 0; row < height; row++) {
+            byte spriteByte = memory.read(registers.indexRegister + row);
+            for (int col = 0; col < 8; col++) {
+                if ((spriteByte & (0x80 >> col)) != 0) {
+                    int displayX = (vx + col) % 64;
+                    int displayY = (vy + row) % 32;
                     if (display.getPixelState(displayX, displayY)) {
-                        registers.variableRegisters[0xF] = 1; //Set VF to 1 if collision
-                        display.setPixel(displayX, displayY, false);
-                    } else {
-                        display.setPixel(displayX, displayY, true);
+                        registers.variableRegisters[0xF] = 1;
                     }
+                    display.setPixel(displayX, displayY, !display.getPixelState(displayX, displayY));
                 }
             }
-
         }
         display.updateDisplay();
-
     }
+
 
     public void cls() {
         display.clearScreen();
@@ -349,7 +341,7 @@ public class CPU {
     }
 
     public void jpTo(int nnn) {
-        programCounter.jump(nnn + registers.variableRegisters[0x0]);
+        programCounter.jump(nnn + registers.variableRegisters[0]);
     }
 
     public void seCompareByte(int x, byte nn) {
@@ -379,14 +371,15 @@ public class CPU {
         int vy = registers.variableRegisters[y] & 0xFF;
         int result = vx + vy;
         //System.out.println("Result: " + result);
-        registers.variableRegisters[x] = (byte) (result & 0xFF);
+        registers.variableRegisters[x] = (byte) result;
         registers.variableRegisters[0xF] = (byte) (result > 255 ? 1 : 0);
         //System.out.println("Carry flag: " + registers.variableRegisters[0xF]);
 
     }
 
     public void addI(int x) {
-        registers.indexRegister += registers.variableRegisters[x];
+        int valX = registers.variableRegisters[x] & 0xFF;
+        registers.indexRegister += valX;
 
     }
 
@@ -394,22 +387,22 @@ public class CPU {
         //If this calculation will underflow, set carry flag - clear it if not
         int vx = (registers.variableRegisters[x] & 0xFF);
         int vy = (registers.variableRegisters[y] & 0xFF);
-        System.out.println("X:" + x);
-        System.out.println("Y: " + y);
-        System.out.println("vx: " + vx);
-        System.out.println("vy: " + vy);
+//        System.out.println("X:" + x);
+//        System.out.println("Y: " + y);
+//        System.out.println("vx: " + vx);
+//        System.out.println("vy: " + vy);
         byte result = (byte) ((vx - vy));
         registers.variableRegisters[x] = (byte) (result & 0xFF);
-        System.out.println("Result: " + result);
+//        System.out.println("Result: " + result);
 
         if (vx > vy) {
             registers.variableRegisters[0xF] = 0x1;
         } else {
             registers.variableRegisters[0xF] = 0x0;
         }
-        System.out.println("Register: " + registers.variableRegisters[x]);
-        System.out.println("Register as int: " + (int) registers.variableRegisters[x]);
-        System.out.println("Flag: " + registers.variableRegisters[0xF]);
+//        System.out.println("Register: " + registers.variableRegisters[x]);
+//        System.out.println("Register as int: " + (int) registers.variableRegisters[x]);
+//        System.out.println("Flag: " + registers.variableRegisters[0xF]);
 
     }
 
@@ -423,7 +416,7 @@ public class CPU {
     }
 
     public void ldByte(int x, byte nn) {
-        registers.variableRegisters[x] = (byte) (nn & 0xFF);
+        registers.variableRegisters[x] = nn;
     }
 
     public void ldRegister(int x, int y) {
@@ -470,7 +463,9 @@ public class CPU {
     }
 
     public void ldFontDigit(int x) {
-        registers.indexRegister = memory.getAddressOfDigit(registers.variableRegisters[x]);
+        int digit = registers.variableRegisters[x] & 0xFF;
+        registers.indexRegister = memory.getAddressOfDigit(digit);
+//        System.out.println("Index Register set to: " + registers.indexRegister);
     }
 
     public void ldBCD(int x) {
