@@ -91,7 +91,7 @@ public class Memory {
             }
             inputStream.read(buffer);
             loadProgramDataToMemory(buffer);
-            printMemoryMap();
+            //printMemoryMap();
             return true;
         } catch (IOException e) {
             System.out.println("Couldn't load Chip 8 ROM: " + e.getMessage());

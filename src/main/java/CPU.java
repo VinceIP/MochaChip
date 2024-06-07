@@ -20,7 +20,7 @@ public class CPU {
 
     public void start() {
         running = true;
-        long delay = 1; //Delay in ms - roughly 60hz
+        long delay = 0; //Delay in ms - roughly 60hz
         while (running) {
             registers.update();
             if (!waitingForKeyPress) cycle();
@@ -188,7 +188,7 @@ public class CPU {
                     // 8xy7 SUBN Vx, Vy - Set Vx = Vy - Vx
                     // If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
                 } else if (nStr.equals("7")) {
-                    subWithCarryReverse(y, x);
+                    subWithCarryReverse(x, y);
 
                     //8xyE SHL Vx {, Vy}
                     //Set Vx = Vx SHL 1.
@@ -367,52 +367,58 @@ public class CPU {
     }
 
     public void addWithCarry(int x, int y) {
+        System.out.println("add with carry");
         int vx = registers.variableRegisters[x] & 0xFF;
         int vy = registers.variableRegisters[y] & 0xFF;
-        int result = vx + vy;
+        int result = (vx + vy) & 0xFF;
+        int intResult = vx + vy;
         //System.out.println("Result: " + result);
         registers.variableRegisters[x] = (byte) result;
-        registers.variableRegisters[0xF] = (byte) (result > 255 ? 1 : 0);
+        registers.variableRegisters[0xF] = (byte) (intResult > 255 ? 1 : 0);
         //System.out.println("Carry flag: " + registers.variableRegisters[0xF]);
+        System.out.println("vx: " + vx);
+        System.out.println("vy: " + vy);
+        System.out.println("result: " + result);
+        System.out.println("flag: " + registers.variableRegisters[0xF]);
 
     }
 
     public void addI(int x) {
+        int result = registers.variableRegisters[x] + x;
         int valX = registers.variableRegisters[x] & 0xFF;
+        if(result>255) registers.variableRegisters[0xF] = 1;
+        else registers.variableRegisters[0xF] = 0;
         registers.indexRegister += valX;
 
     }
 
     public void subWithCarry(int x, int y) {
+        System.out.println("Sub with carry");
         //If this calculation will underflow, set carry flag - clear it if not
         int vx = (registers.variableRegisters[x] & 0xFF);
         int vy = (registers.variableRegisters[y] & 0xFF);
-//        System.out.println("X:" + x);
-//        System.out.println("Y: " + y);
-//        System.out.println("vx: " + vx);
-//        System.out.println("vy: " + vy);
-        byte result = (byte) ((vx - vy));
+        int result = (vx - vy) & 0xFF;
         registers.variableRegisters[x] = (byte) (result & 0xFF);
-//        System.out.println("Result: " + result);
-
-        if (vx > vy) {
-            registers.variableRegisters[0xF] = 0x1;
-        } else {
-            registers.variableRegisters[0xF] = 0x0;
-        }
-//        System.out.println("Register: " + registers.variableRegisters[x]);
-//        System.out.println("Register as int: " + (int) registers.variableRegisters[x]);
-//        System.out.println("Flag: " + registers.variableRegisters[0xF]);
+        if(vx>vy) registers.variableRegisters[0xF] = 1;
+        else registers.variableRegisters[0xF] = 0;
+        System.out.println("vx: " + vx);
+        System.out.println("vy: " + vy);
+        System.out.println("result: " + result);
+        System.out.println("flag: " + registers.variableRegisters[0xF]);
 
     }
 
-    public void subWithCarryReverse(int y, int x) {
+    public void subWithCarryReverse(int x, int y) {
+        System.out.println("Sub with carry reverse");
         int vx = registers.variableRegisters[x] & 0xFF;
         int vy = registers.variableRegisters[y] & 0xFF;
-        int difference = vy - vx;
-        registers.variableRegisters[x] = (byte) (difference & 0xFF); // Ensure result is within 8 bit
+        int result = (vy - vx) & 0xFF;
+        registers.variableRegisters[x] = (byte) (result & 0xFF); // Ensure result is within 8 bit
         registers.variableRegisters[0xF] = (byte) (vy > vx ? 1 : 0); // Set VF to 1 if no borrow
-
+        System.out.println("vy: " + vy);
+        System.out.println("vx: " + vx);
+        System.out.println("result: " + result);
+        System.out.println("flag: " + registers.variableRegisters[0xF]);
     }
 
     public void ldByte(int x, byte nn) {
