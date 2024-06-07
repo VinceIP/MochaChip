@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
+import java.util.ArrayList;
 
 public class Chip8Emulator extends JFrame {
     private Display display;
@@ -18,20 +19,21 @@ public class Chip8Emulator extends JFrame {
         setTitle("Chip8Emulator");
         //setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
         input = new Input();
         display = new Display(input);
         add(display, BorderLayout.CENTER);
+        setResizable(false);
         initMenu();
         pack();
         adjustSizeForInsets();
-        display.resizeDisplay(display.getPreferredSize().width, display.getPreferredSize().height);
+        setLocationRelativeTo(null);
+        //display.resizeDisplay(display.getPreferredSize().width, display.getPreferredSize().height);
         getContentPane().setBackground(UIManager.getColor("Panel.background"));
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                super.componentResized(e);
-                display.resizeDisplay(getWidth(), getHeight());
+                display.resizeDisplay();
+                pack();
             }
         });
     }
@@ -46,18 +48,49 @@ public class Chip8Emulator extends JFrame {
 
     private void initMenu() {
         JMenuBar menuBar = new JMenuBar();
+        ArrayList<JMenu> menus = new ArrayList<>();
 
         JMenu fileMenu = new JMenu("File");
         JMenu emulationMenu = new JMenu("Emulation");
+        JMenu displayMenu = new JMenu("Display");
         JMenu aboutMenu = new JMenu("About");
 
+        //File
         JMenuItem loadRomItem = new JMenuItem("Load CH8 file");
         loadRomItem.addActionListener(e -> loadRom());
         JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.addActionListener(e -> quit());
 
-        JMenuItem pauseItem = new JMenuItem("Pause Emulation");
+        //Emulation
+        JMenuItem pauseItem = new JMenuItem("Pause/Resume Emulation");
+        pauseItem.addActionListener(e -> pauseEmulation());
         JMenuItem stopItem = new JMenuItem("Stop Emulation");
+        stopItem.addActionListener(e -> stopEmulation());
         JMenuItem optionsItem = new JMenuItem("Options");
+
+        //Display
+            //Size
+            JMenu windowSize = new JMenu("Size");
+            JMenuItem windowSize1x = new JMenuItem("1");
+            windowSize1x.addActionListener(e -> adjustSize(12));
+            JMenuItem windowSize2x = new JMenuItem("2");
+            windowSize2x.addActionListener(e -> adjustSize(16));
+            JMenuItem windowSize3x = new JMenuItem("3");
+            windowSize3x.addActionListener(e -> adjustSize(22));
+            JMenuItem windowSize4x = new JMenuItem("4");
+            windowSize4x.addActionListener(e -> adjustSize(28));
+
+            //Color
+            JMenu colorMenu = new JMenu("Color");
+            JMenuItem colorMono = new JMenuItem("Monochrome");
+            JMenuItem colorSoftMono = new JMenuItem("Soft Monochrome");
+            JMenuItem colorIce = new JMenuItem("Ice");
+            JMenuItem colorOlive = new JMenuItem("Olive");
+            JMenuItem colorLava = new JMenuItem("Lava");
+            JMenuItem colorGrape = new JMenuItem("Grape");
+            JMenuItem colorDesert = new JMenuItem("Desert");
+            JMenuItem colorPastel = new JMenuItem("Pastel");
+
 
         JMenuItem aboutItem = new JMenuItem("About Chip8Emulator");
 
@@ -68,10 +101,37 @@ public class Chip8Emulator extends JFrame {
         emulationMenu.add(stopItem);
         emulationMenu.add(optionsItem);
 
+        displayMenu.add(windowSize);
+        displayMenu.add(colorMenu);
+        windowSize.add(windowSize1x);
+        windowSize.add(windowSize2x);
+        windowSize.add(windowSize3x);
+        windowSize.add(windowSize4x);
+
+        displayMenu.add(colorMenu);
+        colorMenu.add(colorMono);
+        colorMono.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.MONOCHROME));
+        colorMenu.add(colorSoftMono);
+        colorSoftMono.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.SOFT_MONOCHROME));
+        colorMenu.add(colorIce);
+        colorIce.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.ICE));
+        colorMenu.add(colorOlive);
+        colorOlive.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.OLIVE));
+        colorMenu.add(colorLava);
+        colorLava.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.LAVA));
+        colorMenu.add(colorGrape);
+        colorGrape.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.GRAPE));
+        colorMenu.add(colorDesert);
+        colorDesert.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.DESERT));
+        colorMenu.add(colorPastel);
+        colorPastel.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.PASTEL));
+
+
         aboutMenu.add(aboutItem);
 
         menuBar.add(fileMenu);
         menuBar.add(emulationMenu);
+        menuBar.add(displayMenu);
         menuBar.add(aboutMenu);
 
         setJMenuBar(menuBar);
@@ -111,6 +171,7 @@ public class Chip8Emulator extends JFrame {
     private void stopEmulation() {
         if (cpu != null) {
             cpu.stop();
+            repaint();
         }
         if (emulationThread != null && emulationThread.isAlive()) {
             try {
@@ -119,6 +180,25 @@ public class Chip8Emulator extends JFrame {
                 JOptionPane.showMessageDialog(this, "Error occurred while halting emulation thread.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void pauseEmulation() {
+        cpu.togglePause();
+    }
+
+    private void quit() {
+        System.exit(1);
+    }
+
+    private void adjustSize(int scaleFactor) {
+        display.adjustSize(scaleFactor);
+        pack();
+        centerWindow();
+    }
+
+    private void centerWindow() {
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setLocation((screenSize.width - getWidth()) / 2, (screenSize.height - getHeight()) / 2);
     }
 
     public static void main(String[] args) {

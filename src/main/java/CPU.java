@@ -42,6 +42,12 @@ public class CPU {
 
     public void stop() {
         running = false;
+        display.clearScreen();
+    }
+
+    public void togglePause() {
+        if (running) running = false;
+        else running = true;
     }
 
     public void reset() {

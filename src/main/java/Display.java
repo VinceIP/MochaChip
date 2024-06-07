@@ -10,9 +10,11 @@ public class Display extends JPanel {
     private int scaleFactor = 14;
     public int windowWidth = displayWidth * scaleFactor;
     public int windowHeight = displayHeight * scaleFactor;
+    ColorTheme colorTheme;
 
     public Display(Input input) {
         this.input = input;
+        this.colorTheme = new ColorTheme();
         setPreferredSize(new Dimension((displayWidth * scaleFactor), (displayHeight * scaleFactor)));
         reset();
     }
@@ -26,9 +28,9 @@ public class Display extends JPanel {
     @Override
     protected void paintComponent(Graphics g){
         super.paintComponent(g);
-        g.setColor(Color.BLACK);
+        g.setColor(colorTheme.getBackground());
         g.fillRect(0,0, getWidth(), getHeight());
-        g.setColor(Color.WHITE);
+        g.setColor(colorTheme.getForeground());
         for (int y = 0; y < displayHeight; y++) {
             for (int x = 0; x < displayWidth; x++) {
                 if (display[x][y]) {
@@ -38,14 +40,15 @@ public class Display extends JPanel {
         }
     }
 
-    public void resizeDisplay(int windowWidth, int windowHeight){
-        int widthScale = windowWidth / displayWidth;
-        int heightScale = windowHeight / displayHeight;
-        scaleFactor = Math.min(widthScale, heightScale);
+    public void resizeDisplay(){
         setPreferredSize(new Dimension((displayWidth * scaleFactor), (displayHeight * scaleFactor)));
         revalidate();
         repaint();
+    }
 
+    public void adjustSize(int scaleFactor){
+        this.scaleFactor = scaleFactor;
+        resizeDisplay();
     }
 
     public void updateDisplay() {
