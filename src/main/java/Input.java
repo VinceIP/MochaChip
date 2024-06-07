@@ -8,9 +8,13 @@ public class Input implements KeyListener {
 
     int lastKeyPressed = 16;
 
-    public Input(CPU cpu) {
-        this.cpu = cpu;
+    public Input() {
+        reset();
+    }
+
+    public void reset(){
         keys = new boolean[17];
+
     }
 
     public void pressKey(int key) {

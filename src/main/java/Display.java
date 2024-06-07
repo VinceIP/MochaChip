@@ -1,49 +1,55 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class Display {
+public class Display extends JPanel {
     JFrame frame;
-    DisplayPanel panel;
     final int displayWidth = 64;
     final int displayHeight = 32;
     boolean[][] display;
     public Input input;
+    private int scaleFactor = 14;
+    public int windowWidth = displayWidth * scaleFactor;
+    public int windowHeight = displayHeight * scaleFactor;
 
-    public Display() {
-        display = new boolean[displayWidth][displayHeight];
-        panel = new DisplayPanel();
-
-        // Create GUI on the Event Dispatch Thread
-        SwingUtilities.invokeLater(() -> {
-            frame = new JFrame("Chip-8 Emulator");
-            panel = new DisplayPanel();
-            frame.add(panel);
-            frame.setSize(displayWidth * 14 + 30, displayHeight * 14 +30); // Scale size
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setVisible(true);
-            frame.addKeyListener(input);
-        });
+    public Display(Input input) {
+        this.input = input;
+        setPreferredSize(new Dimension((displayWidth * scaleFactor), (displayHeight * scaleFactor)));
+        reset();
     }
 
-    private class DisplayPanel extends JPanel {
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            g.setColor(Color.BLACK);
-            g.fillRect(0, 0, getWidth(), getHeight());
-            g.setColor(Color.WHITE);
-            for (int y = 0; y < displayHeight; y++) {
-                for (int x = 0; x < displayWidth; x++) {
-                    if (display[x][y]) {
-                        g.fillRect(x * 14, y * 14, 14, 14); // Scale pixels
-                    }
+    public void reset(){
+        display = new boolean[displayWidth][displayHeight];
+        addKeyListener(input);
+        setFocusable(true);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g){
+        super.paintComponent(g);
+        g.setColor(Color.BLACK);
+        g.fillRect(0,0, getWidth(), getHeight());
+        g.setColor(Color.WHITE);
+        for (int y = 0; y < displayHeight; y++) {
+            for (int x = 0; x < displayWidth; x++) {
+                if (display[x][y]) {
+                    g.fillRect(x * scaleFactor, y * scaleFactor, scaleFactor, scaleFactor); // Scale pixels
                 }
             }
         }
     }
 
+    public void resizeDisplay(int windowWidth, int windowHeight){
+        int widthScale = windowWidth / displayWidth;
+        int heightScale = windowHeight / displayHeight;
+        scaleFactor = Math.min(widthScale, heightScale);
+        setPreferredSize(new Dimension((displayWidth * scaleFactor), (displayHeight * scaleFactor)));
+        revalidate();
+        repaint();
+
+    }
+
     public void updateDisplay() {
-        panel.repaint();
+        repaint();
     }
 
     public void setPixel(int x, int y, boolean enabled){

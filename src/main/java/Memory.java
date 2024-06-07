@@ -1,3 +1,4 @@
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -27,13 +28,18 @@ public class Memory {
     };
 
     public Memory() {
-        memory = new byte[4096];
+        reset();
     }
 
     public void initialize() {
         //System.out.println("Initializing memory.");
         reserveMemoryForInterpreter();
         loadFontToMemory();
+    }
+
+    public void reset() {
+        memory = new byte[4096];
+        initialize();
     }
 
     public void write(int address, byte value) {
@@ -67,18 +73,17 @@ public class Memory {
         }
     }
 
-    public void loadChip8File() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("test/keypadtest.ch8")) {
-            if (inputStream == null) {
-                throw new IOException("Chip 8 ROM not found in resources folder.");
-            }
+    public boolean loadChip8File(String filePath) {
+        try (InputStream inputStream = new FileInputStream(filePath)) {
             byte[] buffer = new byte[inputStream.available()];
             inputStream.read(buffer);
             loadProgramDataToMemory(buffer);
             System.out.println("Data loaded. Here's the map:");
             //printMemoryMap(0x200, 0x210);
+            return true;
         } catch (IOException e) {
             System.out.println("Couldn't load Chip 8 ROM: " + e.getMessage());
+            return false;
         }
     }
 
