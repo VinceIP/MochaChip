@@ -8,15 +8,15 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.ArrayList;
 
-public class Chip8Emulator extends JFrame {
+public class MochaChip extends JFrame {
     private Display display;
     private Input input;
     private CPU cpu;
     private Thread emulationThread;
     private String lastPathUsed;
 
-    public Chip8Emulator() {
-        setTitle("Chip8Emulator");
+    public MochaChip() {
+        setTitle("MochaChip");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         input = new Input();
@@ -208,7 +208,7 @@ public class Chip8Emulator extends JFrame {
         SwingUtilities.invokeLater(() -> {
             FlatDarkLaf.setup();
             UIManager.put("MenuBar.background", UIManager.getColor("Panel.background"));
-            Chip8Emulator emulator = new Chip8Emulator();
+            MochaChip emulator = new MochaChip();
             emulator.setVisible(true);
         });
     }

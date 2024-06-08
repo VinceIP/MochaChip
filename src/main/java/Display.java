@@ -7,7 +7,7 @@ public class Display extends JPanel {
     final int displayHeight = 32;
     boolean[][] display;
     public Input input;
-    private int scaleFactor = 14;
+    private int scaleFactor = 16;
     public int windowWidth = displayWidth * scaleFactor;
     public int windowHeight = displayHeight * scaleFactor;
     ColorTheme colorTheme;
