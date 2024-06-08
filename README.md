@@ -1,4 +1,4 @@
-# mochachip.MochaChip
+# MochaChip
 
 ![Space Invaders](assets/screen1.png)
 
@@ -6,7 +6,7 @@
 
 ## About
 
-mochachip.MochaChip is an emulator/interpreter for the [CHIP-8 interpreted language](https://en.wikipedia.org/wiki/CHIP-8) written
+MochaChip is an emulator/interpreter for the [CHIP-8 interpreted language](https://en.wikipedia.org/wiki/CHIP-8) written
 in Java 17.
 
 CHIP-8 was created in the 1970s to be run on hobbyist 8-bit microcomputers like
@@ -39,7 +39,7 @@ Drawing CHIP-8's output to the screen is done entirely in Swing by essentially p
 
 ## Current features
 
-- mochachip.MochaChip can load any .ch8 file through the GUI. Any CHIP-8 program that makes use of an extension like SUPER-CHIP or
+- MochaChip can load any .ch8 file through the GUI. Any CHIP-8 program that makes use of an extension like SUPER-CHIP or
   xochip will not work (yet).
 
 - The viewport can be resized by selecting a scale factor in the display menu. The original CHIP-8 is restricted to just
@@ -56,7 +56,7 @@ Drawing CHIP-8's output to the screen is done entirely in Swing by essentially p
 
 ## Current bugs
 
-- mochachip.MochaChip can run most(-ish) original CHIP-8 programs. I've found quite a few that do not run yet, likely due to how
+- MochaChip can run most(-ish) original CHIP-8 programs. I've found quite a few that do not run yet, likely due to how
   I'm implementing some instructions and working with some of Java's quirks. You will find some of the more complex
   CHIP-8 programs will not run or produce unexpected behavior. Feel free
   to [open an issue](https://github.com/VinceIP/MochaChip/issues)
