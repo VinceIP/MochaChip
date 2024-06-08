@@ -17,17 +17,15 @@ public class Chip8Emulator extends JFrame {
 
     public Chip8Emulator() {
         setTitle("Chip8Emulator");
-        //setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
         input = new Input();
         display = new Display(input);
         add(display, BorderLayout.CENTER);
-        setResizable(false);
         initMenu();
         pack();
         adjustSizeForInsets();
         setLocationRelativeTo(null);
-        //display.resizeDisplay(display.getPreferredSize().width, display.getPreferredSize().height);
         getContentPane().setBackground(UIManager.getColor("Panel.background"));
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -53,6 +51,7 @@ public class Chip8Emulator extends JFrame {
         JMenu fileMenu = new JMenu("File");
         JMenu emulationMenu = new JMenu("Emulation");
         JMenu displayMenu = new JMenu("Display");
+        JMenu settingsMenu = new JMenu("Settings");
         JMenu aboutMenu = new JMenu("About");
 
         //File
@@ -69,28 +68,30 @@ public class Chip8Emulator extends JFrame {
         JMenuItem optionsItem = new JMenuItem("Options");
 
         //Display
-            //Size
-            JMenu windowSize = new JMenu("Size");
-            JMenuItem windowSize1x = new JMenuItem("1");
-            windowSize1x.addActionListener(e -> adjustSize(12));
-            JMenuItem windowSize2x = new JMenuItem("2");
-            windowSize2x.addActionListener(e -> adjustSize(16));
-            JMenuItem windowSize3x = new JMenuItem("3");
-            windowSize3x.addActionListener(e -> adjustSize(22));
-            JMenuItem windowSize4x = new JMenuItem("4");
-            windowSize4x.addActionListener(e -> adjustSize(28));
+        //Size
+        JMenu windowSize = new JMenu("Size");
+        JMenuItem windowSize1x = new JMenuItem("1");
+        windowSize1x.addActionListener(e -> adjustSize(12));
+        JMenuItem windowSize2x = new JMenuItem("2");
+        windowSize2x.addActionListener(e -> adjustSize(16));
+        JMenuItem windowSize3x = new JMenuItem("3");
+        windowSize3x.addActionListener(e -> adjustSize(22));
+        JMenuItem windowSize4x = new JMenuItem("4");
+        windowSize4x.addActionListener(e -> adjustSize(28));
 
-            //Color
-            JMenu colorMenu = new JMenu("Color");
-            JMenuItem colorMono = new JMenuItem("Monochrome");
-            JMenuItem colorSoftMono = new JMenuItem("Soft Monochrome");
-            JMenuItem colorIce = new JMenuItem("Ice");
-            JMenuItem colorOlive = new JMenuItem("Olive");
-            JMenuItem colorLava = new JMenuItem("Lava");
-            JMenuItem colorGrape = new JMenuItem("Grape");
-            JMenuItem colorDesert = new JMenuItem("Desert");
-            JMenuItem colorPastel = new JMenuItem("Pastel");
+        //Color
+        JMenu colorMenu = new JMenu("Color");
+        JMenuItem colorMono = new JMenuItem("Monochrome");
+        JMenuItem colorSoftMono = new JMenuItem("Soft Monochrome");
+        JMenuItem colorIce = new JMenuItem("Ice");
+        JMenuItem colorOlive = new JMenuItem("Olive");
+        JMenuItem colorLava = new JMenuItem("Lava");
+        JMenuItem colorGrape = new JMenuItem("Grape");
+        JMenuItem colorDesert = new JMenuItem("Desert");
+        JMenuItem colorPastel = new JMenuItem("Pastel");
 
+        //Settings
+        JMenuItem settingsItem = new JMenuItem("Open settings");
 
         JMenuItem aboutItem = new JMenuItem("About Chip8Emulator");
 
@@ -126,12 +127,14 @@ public class Chip8Emulator extends JFrame {
         colorMenu.add(colorPastel);
         colorPastel.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.PASTEL));
 
+        settingsMenu.add(settingsItem);
 
         aboutMenu.add(aboutItem);
 
         menuBar.add(fileMenu);
         menuBar.add(emulationMenu);
         menuBar.add(displayMenu);
+        menuBar.add(settingsMenu);
         menuBar.add(aboutMenu);
 
         setJMenuBar(menuBar);
@@ -202,7 +205,6 @@ public class Chip8Emulator extends JFrame {
     }
 
     public static void main(String[] args) {
-        //System.out.println("Hello, world. Starting Chip-8");
         SwingUtilities.invokeLater(() -> {
             FlatDarkLaf.setup();
             UIManager.put("MenuBar.background", UIManager.getColor("Panel.background"));
