@@ -161,7 +161,7 @@ bits from the register and that we aren't interested in two's complement and rea
 a positive/negative switch.
 
 ```
-int val = nn & 0xFF
+    int val = nn & 0xFF
 ```
 
 We do the exact same thing to 'nn', which a value given to us by the CHIP-8 programmer. Again, we don't know what sort
@@ -174,11 +174,11 @@ of value we're getting, so for safety, we restrict it to an unsigned 8-bits by m
 Add the two values, while again restricting them to 1 byte unsigned.
 
 ```
-    int vx = registers.variableRegisters[x] & 0xFF;
+    registers.variableRegisters[x] = (byte)result;
 ```
 
-Now that we know our result is in the range we want, we can put it back into the register 'x'. Note that we don't need to
-and should not refer to memory addresses or register/array indices with bitmasked unsigned values.
+Now that we know our result is in the range we want, we can cast it down to a byte and put it back into the register 'x'.
+Note that we don't need to and should not refer to memory addresses or register/array indices with bitmasked unsigned values.
 
 Believe me when I tell you it took me entirely too long to understand this important quirk of Java and why I was seeing
 strange and incorrect outputs from my code. Follow this bitmasking rule whenever you are **specifically expecting 8-bit,
