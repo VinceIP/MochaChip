@@ -1,3 +1,5 @@
+package mochachip;
+
 import javax.swing.*;
 import java.awt.*;
 

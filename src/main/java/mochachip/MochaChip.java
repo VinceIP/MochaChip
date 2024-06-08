@@ -1,3 +1,5 @@
+package mochachip;
+
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
@@ -67,7 +69,7 @@ public class MochaChip extends JFrame {
         stopItem.addActionListener(e -> stopEmulation());
         JMenuItem optionsItem = new JMenuItem("Options");
 
-        //Display
+        //mochachip.Display
         //Size
         JMenu windowSize = new JMenu("Size");
         JMenuItem windowSize1x = new JMenuItem("1");

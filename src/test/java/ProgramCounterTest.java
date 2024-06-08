@@ -6,7 +6,7 @@
 //
 ////    @Test
 ////    void fetchInstructionTest() {
-////        CPU cpu = new CPU();
+////        mochachip.CPU cpu = new mochachip.CPU();
 ////        cpu.memory.loadChip8File();
 ////        //cpu.memory.printMemoryMap(0x200, 0x210);
 ////

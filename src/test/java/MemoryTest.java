@@ -6,21 +6,21 @@
 //
 //    @Test
 //    void write() {
-//        Memory memory = new Memory();
+//        mochachip.Memory memory = new mochachip.Memory();
 //        memory.write(memory.firstAvailableAddress, (byte) 0xFF);
 //        assertEquals((byte)0xFF, memory.read(memory.firstAvailableAddress));
 //    }
 //
 //    @Test
 //    void writeIllegalArgument(){
-//        Memory memory = new Memory();
+//        mochachip.Memory memory = new mochachip.Memory();
 //        assertThrows(IllegalArgumentException.class, () ->
 //                memory.write(0x1000, (byte)0x01));
 //    }
 //
 //    @Test
 //    void readIllegalArgument(){
-//        Memory memory = new Memory();
+//        mochachip.Memory memory = new mochachip.Memory();
 //        assertThrows(IllegalArgumentException.class, () ->
 //                memory.read(0x1005));
 //    }

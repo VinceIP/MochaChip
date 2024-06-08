@@ -33,7 +33,7 @@
 //    }
 //
 /////    void bitshiftLeft() {
-////        CPU cpu = new CPU(new Display());
+////        mochachip.CPU cpu = new mochachip.CPU(new mochachip.Display());
 ////        cpu.registers.variableRegisters[0xF] = 50;
 ////        cpu.bitshiftLeft(0xF);
 ////        assertEquals(cpu.registers.variableRegisters[0xF], 0);

@@ -1,3 +1,5 @@
+package mochachip;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,10 +51,10 @@ public class Memory {
         byte val = (byte) (value & 0xFF);
         if (address >= 0 && address < MEMORY_SIZE) {
             memory[address] = val;
-            //System.out.printf("Memory write at 0x%X: 0x%02X%n", address, value & 0xFF);
+            //System.out.printf("mochachip.Memory write at 0x%X: 0x%02X%n", address, value & 0xFF);
         } else {
             throw new IllegalArgumentException("Error with request to write memory at " + address
-                    + " with value " + value + ". Memory address out of bounds.");
+                    + " with value " + value + ". mochachip.Memory address out of bounds.");
         }
     }
 
@@ -61,7 +63,7 @@ public class Memory {
             return (byte) (memory[address] & 0xFF);
         } else {
             throw new IllegalArgumentException("Error with request to read memory at " + address
-                    + ". Memory address out of bounds.");
+                    + ". mochachip.Memory address out of bounds.");
         }
     }
 
@@ -77,7 +79,7 @@ public class Memory {
         }
         //System.out.println("Font data loaded into memory:");
         for (int i = 0; i < fontData.length; i++) {
-            //System.out.printf("Memory at 0x%X: 0x%02X%n", fontDataAddress + i, memory[fontDataAddress + i] & 0xFF);
+            //System.out.printf("mochachip.Memory at 0x%X: 0x%02X%n", fontDataAddress + i, memory[fontDataAddress + i] & 0xFF);
         }
     }
 
@@ -103,7 +105,7 @@ public class Memory {
         System.arraycopy(data, 0, memory, PROGRAM_START_ADDRESS, data.length);
         //System.out.println("Program data loaded into memory:");
 //        for (int i = 0; i < data.length; i++) {
-//            System.out.printf("Memory at 0x%X: 0x%02X%n", PROGRAM_START_ADDRESS + i, memory[PROGRAM_START_ADDRESS + i] & 0xFF);
+//            System.out.printf("mochachip.Memory at 0x%X: 0x%02X%n", PROGRAM_START_ADDRESS + i, memory[PROGRAM_START_ADDRESS + i] & 0xFF);
 //        }
     }
 

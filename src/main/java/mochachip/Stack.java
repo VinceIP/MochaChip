@@ -1,12 +1,14 @@
+package mochachip;
+
 public class Stack {
     //Stores return addresses when calling subroutines
     int[] stack;
     int stackPointer;
 
     public Stack() {
-        //Stack has a size of 16 bytes
+        //mochachip.Stack has a size of 16 bytes
         stack = new int[16];
-        //Stack pointer initialized at -1 to indicate the stack is empty - 0 means there is at least 1 address
+        //mochachip.Stack pointer initialized at -1 to indicate the stack is empty - 0 means there is at least 1 address
         // on the stack
         stackPointer = -1;
     }
@@ -17,8 +19,8 @@ public class Stack {
             stackPointer++;
             stack[stackPointer] = address;
         } else {
-            //throw new StackOverflowError("ERROR: Stack overflow when trying to push address " + address);
-            System.out.println("WARNING: Stack overflow when trying to push address " + address);
+            //throw new StackOverflowError("ERROR: mochachip.Stack overflow when trying to push address " + address);
+            System.out.println("WARNING: mochachip.Stack overflow when trying to push address " + address);
         }
     }
 
@@ -30,7 +32,7 @@ public class Stack {
             return address;
 
         } else {
-            throw new StackUnderflowError("ERROR: Stack underflow.");
+            throw new StackUnderflowError("ERROR: mochachip.Stack underflow.");
         }
     }
 

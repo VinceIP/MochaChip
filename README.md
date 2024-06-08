@@ -1,4 +1,4 @@
-# MochaChip
+# mochachip.MochaChip
 
 ![Space Invaders](assets/screen1.png)
 
@@ -6,7 +6,7 @@
 
 ## About
 
-MochaChip is an emulator/interpreter for the [CHIP-8 interpreted language](https://en.wikipedia.org/wiki/CHIP-8) written
+mochachip.MochaChip is an emulator/interpreter for the [CHIP-8 interpreted language](https://en.wikipedia.org/wiki/CHIP-8) written
 in Java 17.
 
 CHIP-8 was created in the 1970s to be run on hobbyist 8-bit microcomputers like
@@ -22,6 +22,11 @@ understanding low-level computer science concepts. That was my goal here. If you
 consider writing your own by getting familiar with CHIP-8's architecture (see resources below). It's best to not view anyone else's code until
 you've tried to get things working yourself.
 
+## Releases and Usage
+
+Download the [latest release](https://github.com/VinceIP/MochaChip/releases/), extract the archive, and run the MochaChip
+JAR file. Requires [Java version 17](https://www.oracle.com/java/technologies/downloads/).
+
 ## Why Java?
 
 Mostly just because I like Java, though it may not be the best choice as I've come to learn - read more about that
@@ -34,7 +39,7 @@ Drawing CHIP-8's output to the screen is done entirely in Swing by essentially p
 
 ## Current features
 
-- MochaChip can load any .ch8 file through the GUI. Any CHIP-8 program that makes use of an extension like SUPER-CHIP or
+- mochachip.MochaChip can load any .ch8 file through the GUI. Any CHIP-8 program that makes use of an extension like SUPER-CHIP or
   xochip will not work (yet).
 
 - The viewport can be resized by selecting a scale factor in the display menu. The original CHIP-8 is restricted to just
@@ -51,7 +56,7 @@ Drawing CHIP-8's output to the screen is done entirely in Swing by essentially p
 
 ## Current bugs
 
-- MochaChip can run most(-ish) original CHIP-8 programs. I've found quite a few that do not run yet, likely due to how
+- mochachip.MochaChip can run most(-ish) original CHIP-8 programs. I've found quite a few that do not run yet, likely due to how
   I'm implementing some instructions and working with some of Java's quirks. You will find some of the more complex
   CHIP-8 programs will not run or produce unexpected behavior. Feel free
   to [open an issue](https://github.com/VinceIP/MochaChip/issues)
@@ -90,7 +95,7 @@ As of writing, I've only been working on this project for a week or so. Thanks t
 guide by Tobias V. Langhoff](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/), I've made a lot of progress in
 a short time. Langhoff's guide offers no code snippets and challenges you to implement logic yourself based on
 CHIP-8's criteria. A big takeaway I got from this is - it literally does not matter which programming language you choose
-to use for a project like this. I've seen a lot of posts on Reddit, Stack Overflow and the like by beginners over the years
+to use for a project like this. I've seen a lot of posts on Reddit, mochachip.Stack Overflow and the like by beginners over the years
 who struggle with choosing a language for whatever project they want to work on. The more time you spend debating on which
 tools to use is less time you have to write code. This goes beyond the scope of writing a simple interpreter. I feel that
 modern machines have become fast enough to the point where you don't have to worry THAT much about performance and overhead.
@@ -153,7 +158,7 @@ Let me explain this line-by-line.
 ```
 
 Create a new int 'vx' to store the value that is currently held in register x. I have my registers in a class separate
-from the CPU and access them like this. We do a logical AND with the hex value 0xFF or 11111111 in binary. This is called
+from the mochachip.CPU and access them like this. We do a logical AND with the hex value 0xFF or 11111111 in binary. This is called
 bitmasking, or extracting only the bits you want from a number. In our case, we don't really know for sure what is
 hiding in register 'x'. I know that my registers are a byte[] array, but I don't necessarily know that Java hasn't put
 negative numbers in there at some point. By doing a logical AND with 0xFF, we tell Java to just give us back 8 raw

@@ -6,14 +6,14 @@
 //
 //    @Test
 //    void testPush() {
-//        Stack stack = new Stack();
+//        mochachip.Stack stack = new mochachip.Stack();
 //        stack.push(0x200);
 //        assertEquals(0x200, stack.pop());
 //    }
 //
 //    @Test
 //    void testPushMultiple() {
-//        Stack stack = new Stack();
+//        mochachip.Stack stack = new mochachip.Stack();
 //        stack.push(0xF11);
 //        stack.push(0xB02);
 //        stack.push(0x00F);
@@ -24,7 +24,7 @@
 //
 //    @Test
 //    void testPop() {
-//        Stack stack = new Stack();
+//        mochachip.Stack stack = new mochachip.Stack();
 //        stack.push(0x200);
 //        int address = stack.pop();
 //        assertEquals(0x200, address);
@@ -33,7 +33,7 @@
 //
 //    @Test
 //    void testPopMultiple() {
-//        Stack stack = new Stack();
+//        mochachip.Stack stack = new mochachip.Stack();
 //        stack.push(0x200);
 //        stack.push(0x210);
 //        stack.push(0x220);
@@ -45,7 +45,7 @@
 //
 //    @Test
 //    void testStackOverflow() {
-//        Stack stack = new Stack();
+//        mochachip.Stack stack = new mochachip.Stack();
 //        //Fill up the stack
 //        for (int i = 0; i < 16; i++) {
 //            stack.push(i);
@@ -58,13 +58,13 @@
 //
 //    @Test
 //    void testStackUnderflow() {
-//        Stack stack = new Stack();
-//        assertThrows(StackUnderflowError.class, stack::pop);
+//        mochachip.Stack stack = new mochachip.Stack();
+//        assertThrows(mochachip.StackUnderflowError.class, stack::pop);
 //    }
 //
 //    @Test
 //    void testIsEmpty() {
-//        Stack stack = new Stack();
+//        mochachip.Stack stack = new mochachip.Stack();
 //        assertEquals(true, stack.isEmpty());
 //        stack.push(0x200);
 //        assertEquals(false, stack.isEmpty());
@@ -72,7 +72,7 @@
 //
 //    @Test
 //    void testIsFull() {
-//        Stack stack = new Stack();
+//        mochachip.Stack stack = new mochachip.Stack();
 //        assertFalse(stack.isFull());
 //        for (int i = 0; i < 16; i++) {
 //            stack.push(i);

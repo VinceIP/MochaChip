@@ -1,3 +1,5 @@
+package mochachip;
+
 import java.awt.*;
 
 public class ColorTheme {
