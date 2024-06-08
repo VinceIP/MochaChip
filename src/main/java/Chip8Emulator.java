@@ -110,21 +110,21 @@ public class Chip8Emulator extends JFrame {
 
         displayMenu.add(colorMenu);
         colorMenu.add(colorMono);
-        colorMono.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.MONOCHROME));
+        colorMono.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.MONOCHROME));
         colorMenu.add(colorSoftMono);
-        colorSoftMono.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.SOFT_MONOCHROME));
+        colorSoftMono.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.SOFT_MONOCHROME));
         colorMenu.add(colorIce);
-        colorIce.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.ICE));
+        colorIce.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.ICE));
         colorMenu.add(colorOlive);
-        colorOlive.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.OLIVE));
+        colorOlive.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.OLIVE));
         colorMenu.add(colorLava);
-        colorLava.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.LAVA));
+        colorLava.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.LAVA));
         colorMenu.add(colorGrape);
-        colorGrape.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.GRAPE));
+        colorGrape.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.GRAPE));
         colorMenu.add(colorDesert);
-        colorDesert.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.DESERT));
+        colorDesert.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.DESERT));
         colorMenu.add(colorPastel);
-        colorPastel.addActionListener(e -> display.colorTheme.setTheme(ColorTheme.Chip8Color.PASTEL));
+        colorPastel.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.PASTEL));
 
 
         aboutMenu.add(aboutItem);

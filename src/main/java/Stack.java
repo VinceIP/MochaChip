@@ -17,7 +17,8 @@ public class Stack {
             stackPointer++;
             stack[stackPointer] = address;
         } else {
-            throw new StackOverflowError("ERROR: Stack overflow when trying to push address " + address);
+            //throw new StackOverflowError("ERROR: Stack overflow when trying to push address " + address);
+            System.out.println("WARNING: Stack overflow when trying to push address " + address);
         }
     }
 

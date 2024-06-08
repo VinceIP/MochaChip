@@ -55,6 +55,11 @@ public class Display extends JPanel {
         repaint();
     }
 
+    public void setColorTheme(ColorTheme.Chip8Color theme){
+        colorTheme.setTheme(theme);
+        updateDisplay();
+    }
+
     public void setPixel(int x, int y, boolean enabled){
         display[x][y] = enabled;
     }

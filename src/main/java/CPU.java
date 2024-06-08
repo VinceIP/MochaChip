@@ -20,7 +20,7 @@ public class CPU {
 
     public void start() {
         running = true;
-        long delay = 0; //Delay in ms - roughly 60hz
+        long delay = 1; //Delay in ms - roughly 60hz
         while (running) {
             registers.update();
             if (!waitingForKeyPress) cycle();
@@ -74,7 +74,10 @@ public class CPU {
         String byte2 = String.format("%02X", memory.read(programCounter.getCurrentAddress() + 1) & 0xFF);
         int instruction = Integer.parseInt(byte1 + byte2, 16);
 
-        programCounter.incrementPC();
+        //Do not increment pc if jump
+        if (byte1.charAt(0) != '1') {
+            programCounter.incrementPC();
+        }
         return instruction;
     }
 
@@ -362,67 +365,61 @@ public class CPU {
         if (registers.variableRegisters[x] != registers.variableRegisters[y]) programCounter.incrementPC();
     }
 
-    public void addByte(int x, byte nn) {
-        registers.variableRegisters[x] += (byte) (nn & 0xFF);
+    public void addByte(int x, int nn) {
+        //Notes and reminders:
+        //& 0xFF masking will clamp variables to unsigned 8-bit values - anything outside range will roll over/under as expected
+        //Java will cast all unsigned data to signed every chance it gets
+        //All instruction implementations should follow this sort of design strategy of first converting our input values
+        //into properly unsigned data within 8 bits.
+
+        int val = nn & 0xFF; //Mask nibble nn to unsigned 8-bit value
+        int vx = registers.variableRegisters[x] & 0xFF; //Get the current value of Vx and unsign it
+        //Add the two values - we mask the result afterward because Java upcasts data to signed integers before math.
+        int result = (vx + val) & 0xFF;
+        //We cast the result down to 8-bits, removing any data that is not the least-significant 8 bits
+        registers.variableRegisters[x] = (byte) result;
     }
 
     public void addWithCarry(int x, int y) {
-        System.out.println("add with carry");
         int vx = registers.variableRegisters[x] & 0xFF;
         int vy = registers.variableRegisters[y] & 0xFF;
         int result = (vx + vy) & 0xFF;
         int intResult = vx + vy;
-        //System.out.println("Result: " + result);
         registers.variableRegisters[x] = (byte) result;
         registers.variableRegisters[0xF] = (byte) (intResult > 255 ? 1 : 0);
-        //System.out.println("Carry flag: " + registers.variableRegisters[0xF]);
-        System.out.println("vx: " + vx);
-        System.out.println("vy: " + vy);
-        System.out.println("result: " + result);
-        System.out.println("flag: " + registers.variableRegisters[0xF]);
 
     }
 
     public void addI(int x) {
-        int result = registers.variableRegisters[x] + x;
-        int valX = registers.variableRegisters[x] & 0xFF;
-        if(result>255) registers.variableRegisters[0xF] = 1;
-        else registers.variableRegisters[0xF] = 0;
-        registers.indexRegister += valX;
-
+        int vx = registers.variableRegisters[x] & 0xFF;
+        int i = registers.indexRegister & 0xFFF; //Index register is a 12-bit value!
+        registers.indexRegister = (vx + i) & 0xFFF; //Mask the result to 12 bits
     }
 
     public void subWithCarry(int x, int y) {
-        System.out.println("Sub with carry");
-        //If this calculation will underflow, set carry flag - clear it if not
-        int vx = (registers.variableRegisters[x] & 0xFF);
-        int vy = (registers.variableRegisters[y] & 0xFF);
-        int result = (vx - vy) & 0xFF;
-        registers.variableRegisters[x] = (byte) (result & 0xFF);
-        if(vx>vy) registers.variableRegisters[0xF] = 1;
-        else registers.variableRegisters[0xF] = 0;
-        System.out.println("vx: " + vx);
-        System.out.println("vy: " + vy);
-        System.out.println("result: " + result);
-        System.out.println("flag: " + registers.variableRegisters[0xF]);
-
-    }
-
-    public void subWithCarryReverse(int x, int y) {
-        System.out.println("Sub with carry reverse");
         int vx = registers.variableRegisters[x] & 0xFF;
         int vy = registers.variableRegisters[y] & 0xFF;
-        int result = (vy - vx) & 0xFF;
-        registers.variableRegisters[x] = (byte) (result & 0xFF); // Ensure result is within 8 bit
-        registers.variableRegisters[0xF] = (byte) (vy > vx ? 1 : 0); // Set VF to 1 if no borrow
-        System.out.println("vy: " + vy);
-        System.out.println("vx: " + vx);
-        System.out.println("result: " + result);
-        System.out.println("flag: " + registers.variableRegisters[0xF]);
+        int result = vx - vy;
+
+        registers.variableRegisters[x] = (byte) (result & 0xFF);
+        registers.variableRegisters[0xF] = (byte) ((vx >= vy) ? 1 : 0);
+
     }
 
-    public void ldByte(int x, byte nn) {
-        registers.variableRegisters[x] = nn;
+
+    public void subWithCarryReverse(int x, int y) {
+        int vx = registers.variableRegisters[x] & 0xFF;
+        int vy = registers.variableRegisters[y] & 0xFF;
+        int result = vy - vx;
+
+        registers.variableRegisters[x] = (byte) (result & 0xFF);
+        registers.variableRegisters[0xF] = (byte) (vy >= vx ? 1 : 0);
+
+    }
+
+    public void ldByte(int x, int nn) {
+        int val = nn & 0xFF;
+        registers.variableRegisters[x] = (byte) val;
     }
 
     public void ldRegister(int x, int y) {
@@ -430,7 +427,7 @@ public class CPU {
     }
 
     public void ldI(int nnn) {
-        registers.indexRegister = nnn;
+        registers.indexRegister = nnn & 0xFFF; //I is 12-bits
     }
 
     public void ldIFor(int x) {
@@ -456,6 +453,7 @@ public class CPU {
     }
 
     public void ldDelayTimerFromRegister(int x) {
+        //Copying bytes to bytes - probably don't need masking for this
         registers.delayTimer = registers.variableRegisters[x];
     }
 
@@ -470,60 +468,64 @@ public class CPU {
 
     public void ldFontDigit(int x) {
         int digit = registers.variableRegisters[x] & 0xFF;
-        registers.indexRegister = memory.getAddressOfDigit(digit);
-//        System.out.println("Index Register set to: " + registers.indexRegister);
+        registers.indexRegister = memory.getAddressOfDigit(digit) & 0xFFF;
     }
 
     public void ldBCD(int x) {
         int dec = registers.variableRegisters[x] & 0xFF;
-        int hundreds = dec / 100;
-        int tens = (dec / 10) % 10;
-        int ones = dec % 10;
-        //System.out.printf("Storing BCD of %d: [%d, %d, %d] at addresses I=%04X, I+1=%04X, I+2=%04X%n",
-        //dec, hundreds, tens, ones, registers.indexRegister, registers.indexRegister + 1, registers.indexRegister + 2);
+        int hundreds = (dec / 100) & 0xFF;
+        int tens = ((dec / 10) % 10) & 0xFF;
+        int ones = (dec % 10) & 0xFF;
+
         memory.write(registers.indexRegister, (byte) hundreds); // Hundreds place
         memory.write(registers.indexRegister + 1, (byte) tens); // Tens place
         memory.write(registers.indexRegister + 2, (byte) ones); // Ones place
     }
 
     public void logicalOR(int x, int y) {
-        registers.variableRegisters[x] = (byte) (registers.variableRegisters[x] | registers.variableRegisters[y]);
+        int vx = registers.variableRegisters[x] & 0xFF;
+        int vy = registers.variableRegisters[y] & 0xFF;
+        registers.variableRegisters[x] = (byte) ((vx | vy) & 0xFF);
 
     }
 
     public void logicalAND(int x, int y) {
-        registers.variableRegisters[x] = (byte) (registers.variableRegisters[x] & registers.variableRegisters[y]);
+        int vx = registers.variableRegisters[x] & 0xFF;
+        int vy = registers.variableRegisters[y] & 0xFF;
+        registers.variableRegisters[x] = (byte) ((vx & vy) & 0xFF);
     }
 
     public void logicalXOR(int x, int y) {
-        registers.variableRegisters[x] = (byte) (registers.variableRegisters[x] ^ registers.variableRegisters[y]);
+        int vx = registers.variableRegisters[x] & 0xFF;
+        int vy = registers.variableRegisters[y] & 0xFF;
+        registers.variableRegisters[x] = (byte) ((vx ^ vy) & 0xFF);
 
     }
 
     public void bitshiftRight(int x) {
-        // Store the least significant bit in carry flag (VF)
-        // Shift Vx right by one bit
-        byte originalValue = registers.variableRegisters[x];
-        // Store the most significant bit in carry flag (VF)
-        byte shiftedValue = (byte) ((originalValue >> 1) & 0xFF);
-        byte carryFlag = (byte) ((originalValue & 0x01));
-        registers.variableRegisters[x] = shiftedValue;
-        registers.variableRegisters[0xF] = (byte) (carryFlag & 0xFF);
+        int vx = registers.variableRegisters[x] & 0xFF;
+        int lsb = vx & 0x01;
+        int shiftedValue = (vx >> 1) & 0xFF;
+
+        registers.variableRegisters[x] = (byte) shiftedValue;
+        registers.variableRegisters[0xF] = (byte) lsb;
 
     }
 
     public void bitshiftLeft(int x) {
-        byte originalValue = registers.variableRegisters[x];
+        int vx = registers.variableRegisters[x] & 0xFF;
         // Store the most significant bit in carry flag (VF)
-        byte shiftedValue = (byte) ((originalValue << 1) & 0xFF);
-        byte carryFlag = (byte) ((originalValue & 0x80) >> 7);
+        byte shiftedValue = (byte) ((vx << 1) & 0xFF);
+        byte msb = (byte) (((vx & 0x80) >> 7) & 0xFF);
         registers.variableRegisters[x] = shiftedValue;
-        registers.variableRegisters[0xF] = (byte) (carryFlag & 0xFF);
+        registers.variableRegisters[0xF] = msb;
 
     }
 
     public void rnd(int x, int nn) {
-        registers.variableRegisters[x] = (byte) ((byte) ((byte) ThreadLocalRandom.current().nextInt(0, 255) & 0xFF) & nn);
+        int rand = ThreadLocalRandom.current().nextInt(0,255) & 0xFF;
+        int result = (rand & (nn & 0xFF)) & 0xFF;
+        registers.variableRegisters[x] = (byte) result;
     }
 
     public void skp(int x) {
