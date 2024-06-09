@@ -14,7 +14,7 @@ public class CPU {
     boolean waitingForKeyPress = false;
     int waitingRegister;
 
-    public CPU(Display display, Input input) {
+    public CPU(Input input, Display display) {
         this.display = display;
         this.input = input;
         reset();
@@ -333,7 +333,7 @@ public class CPU {
                 }
             }
         }
-        display.updateDisplay();
+        display.repaint();
     }
 
 
@@ -542,6 +542,9 @@ public class CPU {
         }
     }
 
+    public Memory getMemory() {
+        return memory;
+    }
 }
 
 class OpcodeUnimplementedException extends RuntimeException {

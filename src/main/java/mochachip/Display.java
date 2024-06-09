@@ -4,12 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Display extends JPanel {
-    JFrame frame;
     final int displayWidth = 64;
     final int displayHeight = 32;
     boolean[][] display;
     public Input input;
-    private int scaleFactor = 16;
+    public int scaleFactor = 16;
     public int windowWidth = displayWidth * scaleFactor;
     public int windowHeight = displayHeight * scaleFactor;
     ColorTheme colorTheme;
@@ -21,17 +20,17 @@ public class Display extends JPanel {
         reset();
     }
 
-    public void reset(){
+    public void reset() {
         display = new boolean[displayWidth][displayHeight];
         addKeyListener(input);
         setFocusable(true);
     }
 
     @Override
-    protected void paintComponent(Graphics g){
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.setColor(colorTheme.getBackground());
-        g.fillRect(0,0, getWidth(), getHeight());
+        g.fillRect(0, 0, getWidth(), getHeight());
         g.setColor(colorTheme.getForeground());
         for (int y = 0; y < displayHeight; y++) {
             for (int x = 0; x < displayWidth; x++) {
@@ -41,6 +40,7 @@ public class Display extends JPanel {
             }
         }
     }
+
 
     public void resizeDisplay(){
         setPreferredSize(new Dimension((displayWidth * scaleFactor), (displayHeight * scaleFactor)));
@@ -53,27 +53,25 @@ public class Display extends JPanel {
         resizeDisplay();
     }
 
-    public void updateDisplay() {
+
+    public void setColorTheme(ColorTheme.Chip8Color theme) {
+        colorTheme.setTheme(theme);
+        revalidate();
         repaint();
     }
 
-    public void setColorTheme(ColorTheme.Chip8Color theme){
-        colorTheme.setTheme(theme);
-        updateDisplay();
-    }
-
-    public void setPixel(int x, int y, boolean enabled){
+    public void setPixel(int x, int y, boolean enabled) {
         display[x][y] = enabled;
     }
 
-    public boolean getPixelState(int x, int y){
+    public boolean getPixelState(int x, int y) {
         return display[x][y];
     }
 
-    public void clearScreen(){
+    public void clearScreen() {
         for (int i = 0; i < displayHeight; i++) {
             for (int j = 0; j < displayWidth; j++) {
-                setPixel(j,i,false);
+                setPixel(j, i, false);
             }
         }
     }

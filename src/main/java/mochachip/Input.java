@@ -16,7 +16,6 @@ public class Input implements KeyListener {
 
     public void reset(){
         keys = new boolean[17];
-
     }
 
     public void pressKey(int key) {

@@ -5,6 +5,12 @@
   <artifactId>MochaChip</artifactId>
   <version>0.1.0-alpha</version>
   <build>
+    <resources>
+      <resource>
+        <filtering>true</filtering>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
