@@ -35,7 +35,7 @@ public class MochaChipGUI {
 
     public void init() {
         frame.setTitle(title + " - " + version);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
         frame.add(display, BorderLayout.CENTER);
         initMenu();

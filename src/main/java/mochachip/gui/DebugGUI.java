@@ -9,29 +9,35 @@ public class DebugGUI {
     private JFrame frame;
     private JPanel memoryViewerPanel;
     private JTextArea memoryViewerTextArea;
+    private JTextArea registerViewerTextArea;
+    private JTextArea instructionViewerTextArea;
     private JPanel registerViewerPanel;
+    private JPanel instructionViewerPanel;
     private CPU cpu;
     private String memoryString;
 
     public DebugGUI(CPU cpu) {
         this.cpu = cpu;
         frame = new JFrame();
-        memoryViewerPanel = new JPanel();
-        memoryViewerTextArea = new JTextArea();
-        registerViewerPanel = new JPanel();
+
+
         init();
     }
 
     private void init() {
         Color bgColor = new Color(25, 25, 25);
-        //memoryViewerPanel.setBackground(bgColor);
+
+        memoryViewerPanel = new JPanel();
+        registerViewerPanel = new JPanel();
+        instructionViewerPanel = new JPanel();
+
+        memoryViewerTextArea = new JTextArea();
+        registerViewerTextArea = new JTextArea();
+        instructionViewerTextArea = new JTextArea();
+
         memoryViewerPanel.add(memoryViewerTextArea);
         memoryViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         memoryViewerPanel.setLayout(new BorderLayout());
-
-        JScrollPane scrollPane = new JScrollPane(memoryViewerTextArea);
-        scrollPane.setVerticalScrollBar(scrollPane.createVerticalScrollBar());
-        memoryViewerPanel.add(scrollPane, BorderLayout.CENTER);
 
         memoryViewerTextArea.setBackground(bgColor);
         memoryViewerTextArea.setEditable(false);
@@ -39,16 +45,46 @@ public class DebugGUI {
         memoryViewerTextArea.setRows(10);
         memoryViewerTextArea.setLineWrap(false);
 
-        registerViewerPanel.setBackground(bgColor);
-        registerViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JScrollPane memoryViewerScrollPane = new JScrollPane(memoryViewerTextArea);
+        memoryViewerScrollPane.setVerticalScrollBar(memoryViewerScrollPane.createVerticalScrollBar());
+        memoryViewerPanel.add(memoryViewerScrollPane, BorderLayout.CENTER);
 
-        frame.setLayout(new GridLayout(1, 2, 5, 5));
+        registerViewerPanel.add(registerViewerTextArea);
+        registerViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        registerViewerPanel.setLayout(new BorderLayout());
+
+        registerViewerTextArea.setBackground(bgColor);
+        registerViewerTextArea.setEditable(false);
+        registerViewerTextArea.setColumns(20);
+        registerViewerTextArea.setRows(10);
+        registerViewerTextArea.setLineWrap(false);
+
+        JScrollPane registerViewerScrollPane = new JScrollPane(registerViewerTextArea);
+        registerViewerScrollPane.setVerticalScrollBar(registerViewerScrollPane.createVerticalScrollBar());
+        registerViewerPanel.add(registerViewerScrollPane, BorderLayout.CENTER);
+
+        instructionViewerPanel.add(instructionViewerTextArea);
+        instructionViewerPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        instructionViewerPanel.setLayout(new BorderLayout());
+
+        instructionViewerTextArea.setBackground(bgColor);
+        instructionViewerTextArea.setEditable(false);
+        instructionViewerTextArea.setColumns(20);
+        instructionViewerTextArea.setRows(10);
+        instructionViewerTextArea.setLineWrap(false);
+
+        JScrollPane instructionViewerScrollPane = new JScrollPane(instructionViewerTextArea);
+        instructionViewerScrollPane.setVerticalScrollBar(instructionViewerScrollPane.createVerticalScrollBar());
+        instructionViewerPanel.add(instructionViewerScrollPane, BorderLayout.CENTER);
+
+        frame.setLayout(new GridLayout(1, 3, 5, 5));
         frame.add(memoryViewerPanel);
         frame.add(registerViewerPanel);
+        frame.add(instructionViewerPanel);
 
         frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
         frame.setResizable(true);
-        frame.setPreferredSize(new Dimension(500, 500));
+        frame.setPreferredSize(new Dimension(800, 600));
         frame.pack();
     }
 
@@ -56,6 +92,8 @@ public class DebugGUI {
     public void update(CPU cpu) {
         this.cpu = cpu; //Update current running cpu reference
         displayMemory();
+        displayRegisters();
+        displayInstructions();
     }
 
     public JFrame getFrame() {
@@ -79,6 +117,14 @@ public class DebugGUI {
             //memoryViewerTextArea.append(value + " ");
             memoryViewerTextArea.append(String.format("%-3s", value));
         }
+    }
+
+    private void displayRegisters() {
+        registerViewerTextArea.setText("Register view");
+    }
+
+    private void displayInstructions(){
+        instructionViewerTextArea.setText("Instruction view");
     }
 
 }
