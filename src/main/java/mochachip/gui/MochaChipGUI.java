@@ -20,6 +20,7 @@ public class MochaChipGUI {
     private CPU cpu;
     private Thread emulationThread;
     private JFrame frame;
+    private DebugGUI debugGUI;
 
 
     public MochaChipGUI(Input input, Display display, CPU cpu) {
@@ -29,9 +30,10 @@ public class MochaChipGUI {
         frame = new JFrame();
         version = getVersion();
         init();
+        this.debugGUI = new DebugGUI(cpu);
     }
 
-    public void init(){
+    public void init() {
         frame.setTitle(title + " - " + version);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setResizable(false);
@@ -49,6 +51,7 @@ public class MochaChipGUI {
         JMenu emulationMenu = new JMenu("Emulation");
         JMenu displayMenu = new JMenu("Display");
         JMenu settingsMenu = new JMenu("Settings");
+        JMenu debuggerMenu = new JMenu("Debugger");
         JMenu aboutMenu = new JMenu("About");
 
         //File
@@ -90,6 +93,11 @@ public class MochaChipGUI {
         //Settings
         JMenuItem settingsItem = new JMenuItem("Open settings");
 
+        //Debugger
+        JMenuItem debuggerItem = new JMenuItem("Open Debugger");
+        debuggerItem.addActionListener(e -> openDebugger());
+
+        //About
         JMenuItem aboutItem = new JMenuItem("About Chip8Emulator");
 
         fileMenu.add(loadRomItem);
@@ -126,12 +134,16 @@ public class MochaChipGUI {
 
         settingsMenu.add(settingsItem);
 
+        debuggerMenu.add(debuggerItem);
+        debuggerItem.addActionListener(e -> openDebugger());
+
         aboutMenu.add(aboutItem);
 
         menuBar.add(fileMenu);
         menuBar.add(emulationMenu);
         menuBar.add(displayMenu);
         menuBar.add(settingsMenu);
+        menuBar.add(debuggerMenu);
         menuBar.add(aboutMenu);
 
         frame.setJMenuBar(menuBar);
@@ -152,7 +164,10 @@ public class MochaChipGUI {
             display.reset();
             input.reset();
             cpu = new CPU(input, display);
-            if (cpu.getMemory().loadChip8File(filePath)) startEmulation();
+            if (cpu.getMemory().loadChip8File(filePath)) {
+                debugGUI.update(cpu);
+                startEmulation();
+            }
         } else if (returnValue == JFileChooser.ERROR_OPTION) {
             JOptionPane.showMessageDialog(frame, "Failed to load CH8 file.", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -200,6 +215,11 @@ public class MochaChipGUI {
         centerWindow();
         frame.revalidate();
         frame.repaint();
+    }
+
+    private void openDebugger() {
+        debugGUI.getFrame().setVisible(true);
+        debugGUI.getFrame().setLocationRelativeTo(this.frame);
     }
 
 

@@ -6,11 +6,11 @@ import java.io.InputStream;
 
 public class Memory {
     //Chip-8 has direct access to up to 4KB of RAM
-    private static final int MEMORY_SIZE = 4096;
-    private static final int FONT_DATA_START_ADDRESS = 0x50;
-    private static final int PROGRAM_START_ADDRESS = 0x200;
+    public static final int MEMORY_SIZE = 4096;
+    public static final int FONT_DATA_START_ADDRESS = 0x50;
+    public static final int PROGRAM_START_ADDRESS = 0x200;
 
-    byte[] memory;
+    private byte[] memory;
     final int firstAvailableAddress = 0x200;
     final int fontDataAddress = 0x50;
     private final byte[] fontData = {
@@ -117,6 +117,12 @@ public class Memory {
             System.out.printf("0x%02X ", memory[i] & 0xFF);
         }
     }
+
+    public byte[] getMemoryArray(){
+        return memory;
+    }
+
+
 
     //Return an address in memory corresponding to a hex digit
     public int getAddressOfDigit(int digit) {
