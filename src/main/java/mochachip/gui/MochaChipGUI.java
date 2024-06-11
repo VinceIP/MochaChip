@@ -159,13 +159,17 @@ public class MochaChipGUI {
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             lastPathUsed = fileChooser.getCurrentDirectory().getAbsolutePath();
             String filePath = fileChooser.getSelectedFile().getAbsolutePath();
-            //System.out.println("Path: " + filePath);
+            //Stop any previous emulation, reset everything in proper order
             stopEmulation();
             display.reset();
             input.reset();
             cpu = new CPU(input, display);
+            cpu.reset();
+            debugGUI.setCpu(cpu);
+            cpu.setDebugGUI(debugGUI);
             if (cpu.getMemory().loadChip8File(filePath)) {
-                debugGUI.update(cpu);
+                //debugGUI.update();
+                debugGUI.updateMemoryMap();
                 startEmulation();
             }
         } else if (returnValue == JFileChooser.ERROR_OPTION) {

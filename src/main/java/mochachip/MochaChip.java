@@ -14,7 +14,7 @@ public class MochaChip {
     public MochaChip() {
         input = new Input();
         display = new Display(input);
-        cpu = new CPU(input, display);
+        //cpu = new CPU(input, display);
         gui = new MochaChipGUI(input, display, cpu);
 
     }

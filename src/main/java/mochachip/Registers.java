@@ -1,5 +1,7 @@
 package mochachip;
 
+import mochachip.gui.DebugGUI;
+
 public class Registers {
 
     //One 16-bit index register "I", points to locations in memory
@@ -12,8 +14,9 @@ public class Registers {
     int indexRegister;
     Stack stack;
     byte[] variableRegisters;
+    private DebugGUI debugGUI;
 
-    public Registers(){
+    public Registers() {
         delayTimer = 0;
         soundTimer = 0;
         indexRegister = 0x00;
@@ -21,9 +24,47 @@ public class Registers {
     }
 
     //Called 60 times per second
-    public void update(){
+    public void update() {
         //Timers always decrementing if not zero
-        if(delayTimer > 0) delayTimer--;
-        if(soundTimer > 0) soundTimer--;
+        if (delayTimer > 0) delayTimer--;
+        if (soundTimer > 0) soundTimer--;
+    }
+
+    public byte getDelayTimer() {
+        return delayTimer;
+    }
+
+    public byte getSoundTimer() {
+        return soundTimer;
+    }
+
+    public int getIndexRegister() {
+        return indexRegister;
+    }
+
+    public Stack getStack() {
+        return stack;
+    }
+
+    public byte[] getVariableRegisters() {
+        return variableRegisters;
+    }
+
+    public byte getVariableRegister(int index){
+        return (byte) (variableRegisters[index] & 0xFF);
+    }
+
+    public void setVariableRegister(int index, int value) {
+        variableRegisters[index] = (byte) (value & 0xFF);
+        debugGUI.updateRegisters();
+    }
+
+    public void setIndexRegister(int value){
+        indexRegister = (value & 0xFFF);
+    }
+
+    public void setDebugGUI(DebugGUI debugGUI){
+        this.debugGUI = debugGUI;
+        this.debugGUI.initRegisterCache();
     }
 }

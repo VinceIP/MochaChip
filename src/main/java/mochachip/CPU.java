@@ -1,5 +1,7 @@
 package mochachip;
 
+import mochachip.gui.DebugGUI;
+
 import java.util.concurrent.ThreadLocalRandom;
 
 public class CPU {
@@ -13,11 +15,12 @@ public class CPU {
     Display display;
     boolean waitingForKeyPress = false;
     int waitingRegister;
+    DebugGUI debugGUI;
 
     public CPU(Input input, Display display) {
         this.display = display;
         this.input = input;
-        reset();
+        //reset();
     }
 
     public void start() {
@@ -63,6 +66,7 @@ public class CPU {
     public void cycle() {
         int currentInstruction = fetchInstruction();
         decode(currentInstruction);
+        //if(debugGUI != null)debugGUI.update();
     }
 
     //Fetch a 2-byte instruction at address in memory
@@ -319,7 +323,7 @@ public class CPU {
     public void draw(int x, int y, int height) {
         int vx = registers.variableRegisters[x] & 0xFF;
         int vy = registers.variableRegisters[y] & 0xFF;
-        registers.variableRegisters[0xF] = 0;
+        registers.setVariableRegister(0xF, 0);
         for (int row = 0; row < height; row++) {
             byte spriteByte = memory.read(registers.indexRegister + row);
             for (int col = 0; col < 8; col++) {
@@ -327,7 +331,7 @@ public class CPU {
                     int displayX = (vx + col) % 64;
                     int displayY = (vy + row) % 32;
                     if (display.getPixelState(displayX, displayY)) {
-                        registers.variableRegisters[0xF] = 1;
+                        registers.setVariableRegister(0xF, 1);
                     }
                     display.setPixel(displayX, displayY, !display.getPixelState(displayX, displayY));
                 }
@@ -379,7 +383,7 @@ public class CPU {
         //Add the two values - we mask the result afterward because Java upcasts data to signed integers before math.
         int result = (vx + val) & 0xFF;
         //We cast the result down to 8-bits, removing any data that is not the least-significant 8 bits
-        registers.variableRegisters[x] = (byte) result;
+        registers.setVariableRegister(x, result);
     }
 
     public void addWithCarry(int x, int y) {
@@ -387,8 +391,8 @@ public class CPU {
         int vy = registers.variableRegisters[y] & 0xFF;
         int result = (vx + vy) & 0xFF;
         int intResult = vx + vy;
-        registers.variableRegisters[x] = (byte) result;
-        registers.variableRegisters[0xF] = (byte) (intResult > 255 ? 1 : 0);
+        registers.setVariableRegister(x, result);
+        registers.setVariableRegister(0xF, (intResult > 255 ? 1 : 0));
 
     }
 
@@ -396,6 +400,7 @@ public class CPU {
         int vx = registers.variableRegisters[x] & 0xFF;
         int i = registers.indexRegister & 0xFFF; //Index register is a 12-bit value!
         registers.indexRegister = (vx + i) & 0xFFF; //Mask the result to 12 bits
+        registers.setIndexRegister(vx + i);
     }
 
     public void subWithCarry(int x, int y) {
@@ -525,7 +530,7 @@ public class CPU {
     }
 
     public void rnd(int x, int nn) {
-        int rand = ThreadLocalRandom.current().nextInt(0,255) & 0xFF;
+        int rand = ThreadLocalRandom.current().nextInt(0, 255) & 0xFF;
         int result = (rand & (nn & 0xFF)) & 0xFF;
         registers.variableRegisters[x] = (byte) result;
     }
@@ -544,6 +549,20 @@ public class CPU {
 
     public Memory getMemory() {
         return memory;
+    }
+
+    public Registers getRegisters() {
+        return registers;
+    }
+
+    public void setDebugGUI(DebugGUI debugGUI) {
+        //Pass debugGUI to this, plus Registers, which will tell debugGUI when to update register view
+        this.debugGUI = debugGUI;
+        this.registers.setDebugGUI(debugGUI);
+    }
+
+    public DebugGUI getDebugGUI() {
+        return debugGUI;
     }
 }
 

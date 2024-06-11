@@ -1,8 +1,10 @@
 package mochachip.gui;
 
 import mochachip.CPU;
+import mochachip.Registers;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 
 public class DebugGUI {
@@ -14,13 +16,11 @@ public class DebugGUI {
     private JPanel registerViewerPanel;
     private JPanel instructionViewerPanel;
     private CPU cpu;
-    private String memoryString;
+    private String[] registerCache;
 
     public DebugGUI(CPU cpu) {
         this.cpu = cpu;
         frame = new JFrame();
-
-
         init();
     }
 
@@ -64,7 +64,7 @@ public class DebugGUI {
         registerViewerPanel.add(registerViewerScrollPane, BorderLayout.CENTER);
 
         instructionViewerPanel.add(instructionViewerTextArea);
-        instructionViewerPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        instructionViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         instructionViewerPanel.setLayout(new BorderLayout());
 
         instructionViewerTextArea.setBackground(bgColor);
@@ -88,12 +88,22 @@ public class DebugGUI {
         frame.pack();
     }
 
+    public void initRegisterCache() {
+        registerCache = new String[cpu.getRegisters().getVariableRegisters().length];
+        Registers registers = cpu.getRegisters();
+        for (int i = 0; i < registers.getVariableRegisters().length; i++) {
+            //Cache all registers and build a string array of their values
+            registerCache[i] = String.format("V%01X: %02X", i, (registers.getVariableRegisters()[i] & 0xFF));
+        }
+    }
+
     //Update some debugger values when needed
-    public void update(CPU cpu) {
-        this.cpu = cpu; //Update current running cpu reference
-        displayMemory();
+    public void updateRegisters() {
         displayRegisters();
-        displayInstructions();
+    }
+
+    public void updateMemoryMap() {
+        displayMemory();
     }
 
     public JFrame getFrame() {
@@ -120,11 +130,33 @@ public class DebugGUI {
     }
 
     private void displayRegisters() {
-        registerViewerTextArea.setText("Register view");
+        Registers registers = cpu.getRegisters();
+        for (int i = 0; i < registers.getVariableRegisters().length; i++) {
+            String newVal = String.format("V%01X: %02X", i, (registers.getVariableRegisters()[i] & 0xFF));
+            if (!newVal.equals(registerCache[i])) {
+                updateRegisterInTextArea(i, newVal);
+                registerCache[i] = newVal;
+            }
+        }
     }
 
-    private void displayInstructions(){
-        instructionViewerTextArea.setText("Instruction view");
+    private void updateRegisterInTextArea(int index, String newVal) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                int start = registerViewerTextArea.getLineStartOffset(index + 3); //+3 for fixed lines at start
+                int end = registerViewerTextArea.getLineEndOffset(index + 3);
+                registerViewerTextArea.replaceRange(newVal, start, end - 1);
+            } catch (BadLocationException e) {
+                //Show error
+            }
+        });
     }
 
+    private void displayInstructions() {
+        instructionViewerTextArea.setText("Instructions:\n");
+    }
+
+    public void setCpu(CPU cpu) {
+        this.cpu = cpu;
+    }
 }
