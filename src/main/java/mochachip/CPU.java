@@ -408,8 +408,8 @@ public class CPU {
         int vy = registers.variableRegisters[y] & 0xFF;
         int result = vx - vy;
 
-        registers.variableRegisters[x] = (byte) (result & 0xFF);
-        registers.variableRegisters[0xF] = (byte) ((vx >= vy) ? 1 : 0);
+        registers.setVariableRegister(x, (result & 0xFF));
+        registers.setVariableRegister(0xF, ((vx >= vy) ? 1 : 0));
 
     }
 
@@ -419,22 +419,22 @@ public class CPU {
         int vy = registers.variableRegisters[y] & 0xFF;
         int result = vy - vx;
 
-        registers.variableRegisters[x] = (byte) (result & 0xFF);
-        registers.variableRegisters[0xF] = (byte) (vy >= vx ? 1 : 0);
+        registers.setVariableRegister(x, (result & 0xFF));
+        registers.setVariableRegister(0xF, (vy >= vx ? 1 : 0));
 
     }
 
     public void ldByte(int x, int nn) {
         int val = nn & 0xFF;
-        registers.variableRegisters[x] = (byte) val;
+        registers.setVariableRegister(x, val);
     }
 
     public void ldRegister(int x, int y) {
-        registers.variableRegisters[x] = registers.variableRegisters[y];
+        registers.setVariableRegister(x, registers.variableRegisters[y]);
     }
 
     public void ldI(int nnn) {
-        registers.indexRegister = nnn & 0xFFF; //I is 12-bits
+        registers.setIndexRegister((nnn & 0xFFF));
     }
 
     public void ldIFor(int x) {
@@ -447,25 +447,25 @@ public class CPU {
     }
 
     public void ldIForRead(int x) {
-        if (x == 0) registers.variableRegisters[0] = memory.read(registers.indexRegister);
+        if (x == 0) registers.setVariableRegister(0, memory.read(registers.indexRegister));
         else {
             for (int i = 0; i <= x; i++) {
-                registers.variableRegisters[i] = memory.read(registers.indexRegister + i);
+                registers.setVariableRegister(i, memory.read(registers.indexRegister+i));
             }
         }
     }
 
     public void ldDelayTimer(int x) {
-        registers.variableRegisters[x] = registers.delayTimer;
+        registers.setVariableRegister(x, registers.delayTimer);
     }
 
     public void ldDelayTimerFromRegister(int x) {
         //Copying bytes to bytes - probably don't need masking for this
-        registers.delayTimer = registers.variableRegisters[x];
+        registers.setDelayTimer(registers.variableRegisters[x]);
     }
 
     public void ldSoundTimer(int x) {
-        registers.soundTimer = registers.variableRegisters[x];
+        registers.setSoundTimer(registers.variableRegisters[x]);
     }
 
     public void ldKey(int x) {
@@ -475,7 +475,7 @@ public class CPU {
 
     public void ldFontDigit(int x) {
         int digit = registers.variableRegisters[x] & 0xFF;
-        registers.indexRegister = memory.getAddressOfDigit(digit) & 0xFFF;
+        registers.setIndexRegister(memory.getAddressOfDigit(digit) & 0xFF);
     }
 
     public void ldBCD(int x) {
@@ -492,20 +492,20 @@ public class CPU {
     public void logicalOR(int x, int y) {
         int vx = registers.variableRegisters[x] & 0xFF;
         int vy = registers.variableRegisters[y] & 0xFF;
-        registers.variableRegisters[x] = (byte) ((vx | vy) & 0xFF);
+        registers.setVariableRegister(x, ((vx | vy)) & 0xFF);
 
     }
 
     public void logicalAND(int x, int y) {
         int vx = registers.variableRegisters[x] & 0xFF;
         int vy = registers.variableRegisters[y] & 0xFF;
-        registers.variableRegisters[x] = (byte) ((vx & vy) & 0xFF);
+        registers.setVariableRegister(x, ((vx & vy)) & 0xFF);
     }
 
     public void logicalXOR(int x, int y) {
         int vx = registers.variableRegisters[x] & 0xFF;
         int vy = registers.variableRegisters[y] & 0xFF;
-        registers.variableRegisters[x] = (byte) ((vx ^ vy) & 0xFF);
+        registers.setVariableRegister(x, (vx ^ vy) & 0xFF);
 
     }
 
@@ -514,8 +514,8 @@ public class CPU {
         int lsb = vx & 0x01;
         int shiftedValue = (vx >> 1) & 0xFF;
 
-        registers.variableRegisters[x] = (byte) shiftedValue;
-        registers.variableRegisters[0xF] = (byte) lsb;
+        registers.setVariableRegister(x, shiftedValue);
+        registers.setVariableRegister(0xF, lsb);
 
     }
 
@@ -524,15 +524,15 @@ public class CPU {
         // Store the most significant bit in carry flag (VF)
         byte shiftedValue = (byte) ((vx << 1) & 0xFF);
         byte msb = (byte) (((vx & 0x80) >> 7) & 0xFF);
-        registers.variableRegisters[x] = shiftedValue;
-        registers.variableRegisters[0xF] = msb;
+        registers.setVariableRegister(x, shiftedValue);
+        registers.setVariableRegister(0xF, msb);
 
     }
 
     public void rnd(int x, int nn) {
         int rand = ThreadLocalRandom.current().nextInt(0, 255) & 0xFF;
         int result = (rand & (nn & 0xFF)) & 0xFF;
-        registers.variableRegisters[x] = (byte) result;
+        registers.setVariableRegister(x, result);
     }
 
     public void skp(int x) {
@@ -559,6 +559,7 @@ public class CPU {
         //Pass debugGUI to this, plus Registers, which will tell debugGUI when to update register view
         this.debugGUI = debugGUI;
         this.registers.setDebugGUI(debugGUI);
+        this.programCounter.setDebugGUI(debugGUI);
     }
 
     public DebugGUI getDebugGUI() {

@@ -56,15 +56,24 @@ public class Registers {
 
     public void setVariableRegister(int index, int value) {
         variableRegisters[index] = (byte) (value & 0xFF);
-        debugGUI.updateRegisters();
+        debugGUI.updateRegister(index,value);
     }
 
     public void setIndexRegister(int value){
         indexRegister = (value & 0xFFF);
+        debugGUI.updateRegister(DebugGUI.RegisterType.I, value);
+    }
+
+    public void setDelayTimer(int value){
+        delayTimer = (byte)(value & 0xFF);
+        debugGUI.updateRegister(DebugGUI.RegisterType.DT, value);
+    }
+
+    public void setSoundTimer(int value){
+        soundTimer = (byte)(value & 0xFF);
     }
 
     public void setDebugGUI(DebugGUI debugGUI){
         this.debugGUI = debugGUI;
-        this.debugGUI.initRegisterCache();
     }
 }
