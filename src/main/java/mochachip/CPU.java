@@ -25,8 +25,9 @@ public class CPU {
 
     public void start() {
         running = true;
-        long delay = 1; //Delay in ms - roughly 60hz
+        long sleepTimeInMicros = 100;
         while (running) {
+            long startTime = System.nanoTime();
             registers.update();
             if (!waitingForKeyPress) cycle();
             else {
@@ -37,11 +38,25 @@ public class CPU {
                     waitingRegister = -1;
                 }
             }
-            try {
-                Thread.sleep(delay);
-            } catch (InterruptedException e) {
-                //e.printStackTrace();
+            long elapsedTime = System.nanoTime() - startTime;
+            long sleepTime = sleepTimeInMicros - (elapsedTime / 1000);
+            if (sleepTime > 0) {
+                long millis = sleepTime / 1000;
+                int nanos = (int) ((sleepTime % 1000) * 1000);
+                try {
+                    if (millis > 0) {
+                        Thread.sleep(millis);
+                    }
+                    if (nanos > 0) {
+                        Thread.sleep(0, nanos);
+                    }
+                } catch (InterruptedException e) {
+                    //e.printStackTrace();
+                }
+            } else {
+                Thread.yield();
             }
+
         }
     }
 
@@ -105,8 +120,6 @@ public class CPU {
         byte nn = (byte) (Integer.parseInt(nnStr, 16) & 0xFF); //8 bits, cast to unsigned byte
         int nnn = Integer.parseInt(nnnStr, 16); ///nnn is probably 12 bits, so an int is needed
 
-        //System.out.println("Decoding instruction: " + String.format("%04X", instruction) + " at PC: " + String.format("%04X", programCounter.getCurrentAddress()));
-
         switch (opCode) {
 
 //            nnn or addr - A 12-bit value, the lowest 12 bits of the instruction
@@ -129,7 +142,6 @@ public class CPU {
 
             //1nnn JP addr - jump
             case "1":
-                //System.out.println("Jumping to address: " + String.format("%04X", nnn));
                 jp(nnn);
                 break;
 
@@ -186,7 +198,6 @@ public class CPU {
 
                     // 8xy5 SUB Vx, Vy - Set Vx = Vx - Vy
                 } else if (nStr.equals("5")) {
-                    //System.out.println("Instr: " + instrStr);
                     subWithCarry(x, y);
 
                     //8xy6 SHR Vx {, Vy} - Set Vx = Vx SHR 1 (shift right)
@@ -337,7 +348,7 @@ public class CPU {
                 }
             }
         }
-        display.repaint();
+        //display.repaint();
     }
 
 
@@ -450,7 +461,7 @@ public class CPU {
         if (x == 0) registers.setVariableRegister(0, memory.read(registers.indexRegister));
         else {
             for (int i = 0; i <= x; i++) {
-                registers.setVariableRegister(i, memory.read(registers.indexRegister+i));
+                registers.setVariableRegister(i, memory.read(registers.indexRegister + i));
             }
         }
     }

@@ -247,8 +247,6 @@ public class DebugGUI {
             for (int i = 512; i < cpu.getMemory().getMemoryArray().length; i++) {
                 String value = String.format("%02X", (memory[i] & 0xFF));
                 String address = String.format("$%04X", i);
-                System.out.println("addr: " + address);
-                System.out.println("val: " + value);
                 if (i == 512 || (i - 0x200) % memoryPerLine == 0) {
                     memoryViewerTextArea.append("\n" + address + ": ");
                 }

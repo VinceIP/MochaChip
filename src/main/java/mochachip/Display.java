@@ -42,13 +42,13 @@ public class Display extends JPanel {
     }
 
 
-    public void resizeDisplay(){
+    public void resizeDisplay() {
         setPreferredSize(new Dimension((displayWidth * scaleFactor), (displayHeight * scaleFactor)));
         revalidate();
         repaint();
     }
 
-    public void adjustSize(int scaleFactor){
+    public void adjustSize(int scaleFactor) {
         this.scaleFactor = scaleFactor;
         resizeDisplay();
     }
@@ -62,6 +62,7 @@ public class Display extends JPanel {
 
     public void setPixel(int x, int y, boolean enabled) {
         display[x][y] = enabled;
+        repaint(new Rectangle(x * scaleFactor, y * scaleFactor, scaleFactor, scaleFactor));
     }
 
     public boolean getPixelState(int x, int y) {
