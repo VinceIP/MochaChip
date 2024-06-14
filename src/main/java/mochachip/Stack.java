@@ -1,9 +1,12 @@
 package mochachip;
 
+import mochachip.gui.DebugGUI;
+
 public class Stack {
     //Stores return addresses when calling subroutines
     int[] stack;
     int stackPointer;
+    private DebugGUI debugGUI;
 
     public Stack() {
         //mochachip.Stack has a size of 16 bytes
@@ -18,9 +21,10 @@ public class Stack {
         if (stackPointer + 1 < stack.length) {
             stackPointer++;
             stack[stackPointer] = address;
+            debugGUI.updateStack(stackPointer,address);
         } else {
-            //throw new StackOverflowError("ERROR: mochachip.Stack overflow when trying to push address " + address);
-            System.out.println("WARNING: mochachip.Stack overflow when trying to push address " + address);
+            //throw new StackOverflowError("ERROR: Stack overflow when trying to push address " + address);
+            System.out.println("WARNING: Stack overflow when trying to push address " + address);
         }
     }
 
@@ -28,11 +32,12 @@ public class Stack {
     public int pop() {
         if (stackPointer >= 0) {
             int address = stack[stackPointer];
+            debugGUI.updateStack(stackPointer, -1);
             stackPointer--;
             return address;
 
         } else {
-            throw new StackUnderflowError("ERROR: mochachip.Stack underflow.");
+            throw new StackUnderflowError("ERROR: Stack underflow.");
         }
     }
 
@@ -43,6 +48,10 @@ public class Stack {
     public boolean isFull() {
         return stackPointer >= 15;
 
+    }
+
+    public void setDebugGUI(DebugGUI debugGUI){
+        this.debugGUI = debugGUI;
     }
 
 }

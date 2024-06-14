@@ -559,6 +559,7 @@ public class CPU {
         //Pass debugGUI to this, plus Registers, which will tell debugGUI when to update register view
         this.debugGUI = debugGUI;
         this.registers.setDebugGUI(debugGUI);
+        this.stack.setDebugGUI(debugGUI);
         this.programCounter.setDebugGUI(debugGUI);
     }
 

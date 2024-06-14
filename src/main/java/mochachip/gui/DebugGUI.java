@@ -12,10 +12,12 @@ public class DebugGUI {
     private JTextArea memoryViewerTextArea;
     private JTextArea instructionViewerTextArea;
     private JPanel registerViewerPanel;
+    private JPanel stackViewerPanel;
+    private JPanel registerAndStackPanel;
     private JPanel instructionViewerPanel;
     private JLabel[] registerViewerLabels;
+    private JLabel[] stackViewerLabels;
     private CPU cpu;
-    private String[] registerCache;
     private JLabel registerILabel;
     private JLabel registerDTLabel;
     private JLabel registerSTLabel;
@@ -34,6 +36,8 @@ public class DebugGUI {
 
         memoryViewerPanel = new JPanel();
         registerViewerPanel = new JPanel();
+        stackViewerPanel = new JPanel();
+        registerAndStackPanel = new JPanel();
         instructionViewerPanel = new JPanel();
 
         memoryViewerTextArea = new JTextArea();
@@ -56,24 +60,29 @@ public class DebugGUI {
         memoryViewerScrollPane.setVerticalScrollBar(memoryViewerScrollPane.createVerticalScrollBar());
         memoryViewerPanel.add(memoryViewerScrollPane, BorderLayout.CENTER);
 
+        registerAndStackPanel.setLayout(new GridLayout(2, 1, 5, 5));
+        registerAndStackPanel.add(registerViewerPanel);
+        registerAndStackPanel.add(stackViewerPanel);
+
         //Register viewer
-        registerViewerPanel.setLayout(new GridLayout(0, 2, 5, 5));
+        registerViewerPanel.setLayout(new GridLayout(0, 2, 25, 25));
         registerViewerPanel.setBackground(bgColor);
         registerViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel vRegistersPanel = new JPanel();
-        vRegistersPanel.setLayout(new BoxLayout(vRegistersPanel, BoxLayout.Y_AXIS));
+        //vRegistersPanel.setLayout(new BoxLayout(vRegistersPanel, BoxLayout.Y_AXIS));
+        vRegistersPanel.setLayout(new GridLayout(0, 2, 5, 5));
         vRegistersPanel.setBackground(bgColor);
-        vRegistersPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        //vRegistersPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         //left column: v registers
         JLabel registerViewerVHeader = new JLabel();
-        registerViewerVHeader.setText("Registers:");
-        registerViewerVHeader.setHorizontalAlignment(JLabel.CENTER);
+        registerViewerVHeader.setText("Registers: ");
+        registerViewerVHeader.setHorizontalAlignment(JLabel.LEFT);
         registerViewerVHeader.setForeground(textColor);
         registerViewerVHeader.setFont(font);
         vRegistersPanel.add(registerViewerVHeader);
-        vRegistersPanel.add(Box.createVerticalStrut(10));
+        vRegistersPanel.add(Box.createVerticalStrut(5));
 
         registerViewerLabels = new JLabel[16];
 
@@ -84,7 +93,6 @@ public class DebugGUI {
             registerViewerLabels[i].setHorizontalAlignment(JLabel.LEFT);
             registerViewerLabels[i].setFont(font);
             registerViewerLabels[i].setForeground(textColor);
-            registerViewerLabels[i].setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
             vRegistersPanel.add(registerViewerLabels[i]);
         }
 
@@ -92,17 +100,16 @@ public class DebugGUI {
 
         //right column: additional registers
         JPanel additionalRegistersPanel = new JPanel();
-        additionalRegistersPanel.setLayout(new BoxLayout(additionalRegistersPanel, BoxLayout.Y_AXIS));
+        additionalRegistersPanel.setLayout(new GridLayout(0, 1, 5, 5));
         additionalRegistersPanel.setBackground(bgColor);
-        additionalRegistersPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        //additionalRegistersPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        additionalRegistersPanel.add(Box.createVerticalStrut(35));
+        additionalRegistersPanel.add(Box.createVerticalStrut(1));
 
         registerILabel = new JLabel("I: 00");
         registerILabel.setHorizontalAlignment(JLabel.LEFT);
         registerILabel.setForeground(textColor);
         registerILabel.setFont(font);
-        registerILabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         additionalRegistersPanel.add(registerILabel);
 
 
@@ -110,26 +117,42 @@ public class DebugGUI {
         registerDTLabel.setHorizontalAlignment(JLabel.LEFT);
         registerDTLabel.setForeground(textColor);
         registerDTLabel.setFont(font);
-        registerDTLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         additionalRegistersPanel.add(registerDTLabel);
 
         registerSTLabel = new JLabel("ST: 00");
         registerSTLabel.setHorizontalAlignment(JLabel.LEFT);
         registerSTLabel.setForeground(textColor);
         registerSTLabel.setFont(font);
-        registerSTLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         additionalRegistersPanel.add(registerSTLabel);
 
         registerPCLabel = new JLabel("PC: 00");
         registerPCLabel.setHorizontalAlignment(JLabel.LEFT);
         registerPCLabel.setForeground(textColor);
         registerPCLabel.setFont(font);
-        registerPCLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        additionalRegistersPanel.add(Box.createVerticalStrut(10));
+        //additionalRegistersPanel.add(Box.createVerticalStrut(10));
         additionalRegistersPanel.add(registerPCLabel);
 
         registerViewerPanel.add(additionalRegistersPanel);
 
+        //Stack
+        stackViewerPanel.setBackground(bgColor);
+        stackViewerPanel.setLayout(new GridLayout(0, 2, 5, 5));
+        stackViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JLabel stackHeaderLabel = new JLabel("Stack: ");
+        stackHeaderLabel.setForeground(textColor);
+        stackHeaderLabel.setFont(font);
+        stackViewerPanel.add(stackHeaderLabel);
+        stackViewerPanel.add(Box.createVerticalStrut(20));
+
+        stackViewerLabels = new JLabel[16];
+        for (int i = 0; i < 16; i++) {
+            String addr = String.format("%01X", i);
+            stackViewerLabels[i] = new JLabel(addr + ": ");
+            stackViewerLabels[i].setForeground(textColor);
+            stackViewerLabels[i].setFont(font);
+            //stackViewerLabels[i].setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+            stackViewerPanel.add(stackViewerLabels[i]);
+        }
 
         instructionViewerPanel.add(instructionViewerTextArea);
         instructionViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -147,7 +170,7 @@ public class DebugGUI {
 
         frame.setLayout(new GridLayout(1, 3, 5, 5));
         frame.add(memoryViewerPanel);
-        frame.add(registerViewerPanel);
+        frame.add(registerAndStackPanel);
         frame.add(instructionViewerPanel);
 
         frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
@@ -158,26 +181,45 @@ public class DebugGUI {
 
     //Update some debugger values when needed
     public void updateRegister(int address, int val) {
-        if (address <= 16) {
-            String regStr = String.format("%01X", address);
-            String valStr = String.format("%02X", (val & 0xFF));
-            registerViewerLabels[address].setText("V" + regStr + ": " + valStr);
+        if (frame.isVisible()) {
+            if (address <= 16) {
+                String regStr = String.format("%01X", address);
+                String valStr = String.format("%02X", (val & 0xFF));
+                registerViewerLabels[address].setText("V" + regStr + ": " + valStr);
+            }
         }
     }
 
     public void updateRegister(RegisterType registerType, int val) {
-        if (registerType == RegisterType.I) {
-            String valStr = String.format("%04X", (val & 0xFFF));
-            registerILabel.setText("I: " + valStr);
-        } else if (registerType == RegisterType.DT) {
-            String valStr = String.format("%02X", (val & 0xFF));
-            registerDTLabel.setText("DT: " + valStr);
-        } else if (registerType == RegisterType.ST) {
-            String valStr = String.format("%02X", (val & 0xFF));
-            registerSTLabel.setText("ST: " + valStr);
-        } else if (registerType == RegisterType.PC) {
-            String valStr = String.format("%02X", (val & 0xFF));
-            registerPCLabel.setText("PC: " + valStr);
+        if (frame.isVisible()) {
+            if (registerType == RegisterType.I) {
+                String valStr = String.format("%04X", (val & 0xFFF));
+                registerILabel.setText("I: " + valStr);
+            } else if (registerType == RegisterType.DT) {
+                String valStr = String.format("%02X", (val & 0xFF));
+                registerDTLabel.setText("DT: " + valStr);
+            } else if (registerType == RegisterType.ST) {
+                String valStr = String.format("%02X", (val & 0xFF));
+                registerSTLabel.setText("ST: " + valStr);
+            } else if (registerType == RegisterType.PC) {
+                String valStr = String.format("%02X", (val & 0xFF));
+                registerPCLabel.setText("PC: " + valStr);
+            }
+        }
+
+    }
+
+    public void updateStack(int index, int address) {
+        if (frame.isVisible()) {
+            String indexStr = String.format("%01X", index);
+            if (address > -1) {
+                String addrStr = String.format("%04X", (address & 0xFFFF));
+                stackViewerLabels[index].setText(indexStr + ": " + addrStr);
+            } else {
+                stackViewerLabels[index].setText(indexStr + ": ");
+
+            }
+
         }
     }
 
@@ -187,8 +229,6 @@ public class DebugGUI {
         DT,
         PC
     }
-
-    ;
 
     public void updateMemoryMap() {
         displayMemory();
