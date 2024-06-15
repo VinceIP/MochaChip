@@ -165,10 +165,24 @@ public class MochaChipGUI {
             input.reset();
             cpu = new CPU(input, display);
             cpu.reset();
+            boolean wasOpen = false;
+            Dimension prevDim = null;
+            Point prevPoint = null;
+            if (debugGUI != null && debugGUI.getFrame().isVisible()) {
+                wasOpen = true;
+                prevDim = debugGUI.getFrame().getSize();
+                prevPoint = debugGUI.getFrame().getLocation();
+                debugGUI.getFrame().setVisible(false);
+            }
+            this.debugGUI = new DebugGUI(cpu);
             debugGUI.setCpu(cpu);
             cpu.setDebugGUI(debugGUI);
+            if (wasOpen && !debugGUI.getFrame().isVisible()) {
+                debugGUI.getFrame().setSize(prevDim);
+                debugGUI.getFrame().setLocation(prevPoint);
+                debugGUI.getFrame().setVisible(true);
+            }
             if (cpu.getMemory().loadChip8File(filePath)) {
-                //debugGUI.update();
                 debugGUI.updateMemoryMap();
                 startEmulation();
             }
@@ -178,7 +192,6 @@ public class MochaChipGUI {
     }
 
     private void startEmulation() {
-        //frame.setSize(display.windowWidth, display.windowHeight);
         //Run emulation on separate thread
         if (emulationThread != null && emulationThread.isAlive()) {
             emulationThread.interrupt();
@@ -211,11 +224,7 @@ public class MochaChipGUI {
 
     public void adjustSize(int scaleFactor) {
         display.adjustSize(scaleFactor);
-        //adjustSizeForInsets();
-        // Explicitly set the size of the JFrame
-        //Dimension newSize = frame.getPreferredSize();
-        //frame.setSize(newSize);
-        frame.pack(); // This should enforce the new size
+        frame.pack();
         centerWindow();
         frame.revalidate();
         frame.repaint();
@@ -227,15 +236,6 @@ public class MochaChipGUI {
     }
 
 
-    public void adjustSizeForInsets() {
-        Insets insets = frame.getInsets();
-        Dimension displaySize = display.getPreferredSize();
-        int menuBarHeight = frame.getJMenuBar().getHeight();
-        frame.setSize(displaySize.width + insets.left + insets.right,
-                displaySize.height + insets.top + insets.bottom + menuBarHeight);
-    }
-
-
     public void centerWindow() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setLocation((screenSize.width - frame.getWidth()) / 2, (screenSize.height - frame.getHeight()) / 2);
@@ -243,7 +243,6 @@ public class MochaChipGUI {
         frame.revalidate();
         frame.repaint();
     }
-
 
     public String getVersion() {
         Properties properties = new Properties();

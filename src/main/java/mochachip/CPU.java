@@ -2,6 +2,7 @@ package mochachip;
 
 import mochachip.gui.DebugGUI;
 
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class CPU {
@@ -16,18 +17,17 @@ public class CPU {
     boolean waitingForKeyPress = false;
     int waitingRegister;
     DebugGUI debugGUI;
+    List<String> instructionList;
 
     public CPU(Input input, Display display) {
         this.display = display;
         this.input = input;
-        //reset();
     }
 
     public void start() {
         running = true;
-        long sleepTimeInMicros = 100;
+        int sleepTimeNanos = 1000;
         while (running) {
-            long startTime = System.nanoTime();
             registers.update();
             if (!waitingForKeyPress) cycle();
             else {
@@ -38,25 +38,11 @@ public class CPU {
                     waitingRegister = -1;
                 }
             }
-            long elapsedTime = System.nanoTime() - startTime;
-            long sleepTime = sleepTimeInMicros - (elapsedTime / 1000);
-            if (sleepTime > 0) {
-                long millis = sleepTime / 1000;
-                int nanos = (int) ((sleepTime % 1000) * 1000);
-                try {
-                    if (millis > 0) {
-                        Thread.sleep(millis);
-                    }
-                    if (nanos > 0) {
-                        Thread.sleep(0, nanos);
-                    }
-                } catch (InterruptedException e) {
-                    //e.printStackTrace();
-                }
-            } else {
-                Thread.yield();
+            try {
+                Thread.sleep(0, sleepTimeNanos);
+            } catch (InterruptedException e) {
+                //
             }
-
         }
     }
 
@@ -79,46 +65,34 @@ public class CPU {
     }
 
     public void cycle() {
-        int currentInstruction = fetchInstruction();
+        Instruction currentInstruction = fetchInstruction();
         decode(currentInstruction);
-        //if(debugGUI != null)debugGUI.update();
     }
 
     //Fetch a 2-byte instruction at address in memory
-    public int fetchInstruction() {
+    public Instruction fetchInstruction() {
         if (programCounter.getCurrentAddress() < 0 || programCounter.getCurrentAddress() >= 4096) {
             throw new IllegalArgumentException("ERROR: Program counter out of bounds.");
         }
-        //Unsign and parse instructions to Strings, combine them, parse to ints to avoid annoying bitwise operations
-        //Yeah, yeah, i know
-        String byte1 = String.format("%02X", memory.read(programCounter.getCurrentAddress()) & 0xFF);
-        String byte2 = String.format("%02X", memory.read(programCounter.getCurrentAddress() + 1) & 0xFF);
-        int instruction = Integer.parseInt(byte1 + byte2, 16);
 
-        //Do not increment pc if jump
-        if (byte1.charAt(0) != '1') {
-            programCounter.incrementPC();
-        }
-        return instruction;
+        //Get a 2 byte instruction
+        int byte1 = memory.read(programCounter.getCurrentAddress()) & 0xFF;
+        int byte2 = memory.read(programCounter.getCurrentAddress() + 1) & 0xFF;
+        //Shift the first byte to the upper 16-bits/left half, then OR with byte2 to combine the 2 bytes
+        int byteCode = (byte1 << 8) | byte2;
+        programCounter.incrementPC();
+        return new Instruction(byteCode);
     }
 
-    public void decode(int instruction) {
-        //We're going to avoid bitwise operations entirely and use strings
-        //to analyze hex values for decoding
-        String instrStr = String.format("%04X", instruction);
-        String opCode = instrStr.substring(0, 1); //First char indicates the opcode
-        String xStr = instrStr.substring(1, 2);
-        String yStr = instrStr.substring(2, 3);
-        String nStr = instrStr.substring(3, 4);
-        String nnStr = instrStr.substring(2);
-        String nnnStr = instrStr.substring(1);
+    public void decode(Instruction instruction) {
 
-        //Parse strings into their values in base 16
-        int x = Integer.parseInt(xStr, 16);
-        int y = Integer.parseInt(yStr, 16);
-        byte n = (byte) (Integer.parseInt(nStr, 16) & 0xFF); //4 bits, cast to unsigned byte
-        byte nn = (byte) (Integer.parseInt(nnStr, 16) & 0xFF); //8 bits, cast to unsigned byte
-        int nnn = Integer.parseInt(nnnStr, 16); ///nnn is probably 12 bits, so an int is needed
+        //Get each value of the byteCode to be used in decoding
+        byte opCode = instruction.getOpcode();
+        byte x = instruction.getNibble1();
+        byte y = instruction.getNibble2();
+        byte n = instruction.getNibble3();
+        byte nn = instruction.getNN();
+        int nnn = instruction.getNNN();
 
         switch (opCode) {
 
@@ -128,196 +102,199 @@ public class CPU {
 //            y - A 4-bit value, the upper 4 bits of the low byte of the instruction
 //            kk or byte - An 8-bit value, the lowest 8 bits of the instruction
 
-            case "0":
-                //00e0 CLS -  clear screen
-                if (xStr.equals("0") && yStr.equals("E") && nStr.equals("0")) {
-                    cls();
-                }
-
-                //00ee RET - return
-                else if (xStr.equals("0") && yStr.equals("E") && nStr.equals("E")) {
-                    ret();
+            case 0x0:
+                switch (nnn) {
+                    //00e0 CLS -  clear screen
+                    case 0x0E0:
+                        cls();
+                        break;
+                    //00ee RET - return
+                    case 0x0EE:
+                        ret();
+                        return;
                 }
                 break;
 
             //1nnn JP addr - jump
-            case "1":
+            case 0x1:
                 jp(nnn);
-                break;
+                return;
 
             //2nnn CALL addr - call subroutine
-            case "2":
+            case 0x2:
                 call(nnn);
-                break;
+                return;
 
             //3xnn SE Vx, byte - Skip next instruction if Vx = nn
-            case "3":
+            case 0x3:
                 seCompareByte(x, nn);
                 break;
 
             //4xnn SNE Vx, byte - Skip next instruction if Vx != nn
-            case "4":
+            case 0x4:
                 sne(x, nn);
                 break;
 
             //5xy0 SE Vx, Vy - Skip next instruction if Vx = Vy
-            case "5":
+            case 0x5:
                 seCompareRegister(x, y);
                 break;
 
             //6xnn LD Vx, byte - Puts value of nn into Vx
-            case "6":
+            case 0x6:
                 ldByte(x, nn);
                 break;
 
             //7xnn ADD Vx, byte - Set Vx = Vx + nn
-            case "7":
+            case 0x7:
                 addByte(x, nn);
                 break;
 
-            case "8":
-                //8xy0 LD Vx, Vy - Set Vx = Vy
-                if (nStr.equals("0")) {
-                    ldRegister(x, y);
+            case 0x8:
+                switch (n) {
+                    //8xy0 LD Vx, Vy - Set Vx = Vy
+                    case 0x0:
+                        ldRegister(x, y);
+                        break;
 
                     // 8xy1 OR Vx, Vy - Set Vx = Vx OR Vy
-                } else if (nStr.equals("1")) {
-                    logicalOR(x, y);
+                    case 0x1:
+                        logicalOR(x, y);
+                        break;
 
                     //8xy2 AND Vx, Vy - Set Vx = Vx & Vy
-                } else if (nStr.equals("2")) {
-                    logicalAND(x, y);
-
+                    case 0x2:
+                        logicalAND(x, y);
+                        break;
                     // 8xy3 XOR Vx, Vy - Set Vx = Vx ^ Vy
-                } else if (nStr.equals("3")) {
-                    logicalXOR(x, y);
-
+                    case 0x3:
+                        logicalXOR(x, y);
+                        break;
                     //8xy4 ADD Vx, Vy - Set Vx - Vx + Vy, set VF carry
-                } else if (nStr.equals("4")) {
-                    addWithCarry(x, y);
+                    case 0x4:
+                        addWithCarry(x, y);
+                        break;
 
                     // 8xy5 SUB Vx, Vy - Set Vx = Vx - Vy
-                } else if (nStr.equals("5")) {
-                    subWithCarry(x, y);
+                    case 0x5:
+                        subWithCarry(x, y);
+                        break;
 
                     //8xy6 SHR Vx {, Vy} - Set Vx = Vx SHR 1 (shift right)
-                    // If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
-                } else if (nStr.equals("6")) {
-                    bitshiftRight(x);
+                    case 0x6:
+                        bitshiftRight(x);
+                        break;
 
                     // 8xy7 SUBN Vx, Vy - Set Vx = Vy - Vx
-                    // If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
-                } else if (nStr.equals("7")) {
-                    subWithCarryReverse(x, y);
+                    case 0x7:
+                        subWithCarryReverse(x, y);
+                        break;
 
                     //8xyE SHL Vx {, Vy}
-                    //Set Vx = Vx SHL 1.
-                    //If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
-                } else if (nStr.equals("E")) {
-                    bitshiftLeft(x);
+                    case 0xE:
+                        bitshiftLeft(x);
+                        break;
+
                 }
                 break;
 
             //9xy0 SNE Vx, Vy - Skip next  instruction if Vx != Vy
-            case "9":
+            case 0x9:
                 sneRegister(x, y);
                 break;
 
             // Annn LD I, addr - Set I to nnn
-            case "A":
+            case 0xA:
                 ldI(nnn);
                 break;
 
             // Bnnn JP V0, addr - Jump to location nnn + V0
-            case "B":
+            case 0xB:
                 jpTo(nnn);
                 break;
 
             // Cxnn RND Vx, byte - Set Vx = random byte AND nn
-            case "C":
+            case 0xC:
                 rnd(x, nn);
                 break;
 
             //Dxyn  DRW Vx, Vy, nibble
-            //mochachip.Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
-
-            //The interpreter reads n bytes from memory, starting at the address stored in I. These bytes are then displayed
-            // as sprites on screen at coordinates (Vx, Vy). Sprites are XORed onto the existing screen. If this causes any
-            // pixels to be erased, VF is set to 1, otherwise it is set to 0. If the sprite is positioned so part of it is outside the
-            // coordinates of the display, it wraps around to the opposite side of the screen. See instruction 8xy3 for more information
-            // on XOR, and section 2.4, mochachip.Display, for more information on the Chip-8 screen and sprites.
-            case "D":
+            //Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+            case 0xD:
                 draw(x, y, n);
                 break;
 
-
-            case "E":
-                //Ex9E  SKP Vx
-                //Skip next instruction if key with the value of Vx is pressed.
-                //Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
-                if (nStr.equals("E")) {
-                    skp(x);
+            case 0xE:
+                switch (nn) {
+                    //Ex9E  SKP Vx
+                    case (byte) 0x9E:
+                        skp(x);
+                        break;
 
                     //ExA1 - SKNP Vx
-                    //Skip next instruction if key with the value of Vx is not pressed.
-                    //Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
-                } else if (nnStr.equals("A1")) {
-                    sknp(x);
+                    case (byte) 0xA1:
+                        sknp(x);
+                        break;
+
                 }
                 break;
 
-
-            case "F":
-                // Fx07 LD Vx, DT - Set Vx = delay timer value
-                if (nnStr.equals("07")) {
-                    ldDelayTimer(x);
+            case 0xF:
+                switch (nn) {
+                    // Fx07 LD Vx, DT - Set Vx = delay timer value
+                    case 0x07:
+                        ldDelayTimer(x);
+                        break;
 
                     //Fx0A  LD Vx, K
-                    //Wait for a key press, store the value of the key in Vx.
-                    //All execution stops until a key is pressed, then the value of that key is stored in Vx.
-                } else if (nnStr.equals("0A")) {
-                    ldKey(x);
+                    case 0x0A:
+                        ldKey(x);
+                        break;
 
                     // Fx15 LD DT, Vx - Set delay timer = Vx
-                } else if (nnStr.equals("15")) {
-                    ldDelayTimerFromRegister(x);
+                    case 0x15:
+                        ldDelayTimerFromRegister(x);
+                        break;
 
                     // Fx18 LD ST, Vx - Set sound timer = Vx
-                } else if (nnStr.equals("18")) {
-                    ldSoundTimer(x);
+                    case 0x18:
+                        ldSoundTimer(x);
+                        break;
 
                     // Fx1E ADD I, Vx - Set I = I + Vx
-                } else if (nnStr.equals("1E")) {
-                    addI(x);
+                    case 0x1E:
+                        addI(x);
+                        break;
 
                     // Fx29 LD F, Vx - Set I = location of sprite digit Vx
-                } else if (nnStr.equals("29")) {
-                    ldFontDigit(x);
+                    case 0x29:
+                        ldFontDigit(x);
+                        break;
 
                     //Fx33 LD B, Vx
-                    //Store binary-coded decimal representation of Vx in memory locations I, I+1, and I+2.
-                    //The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
-                } else if (nnStr.equals("33")) {
-                    ldBCD(x);
+                    case 0x33:
+                        ldBCD(x);
+                        break;
 
                     //Fx55 LD [I], Vx
-                    //Store registers V0 through Vx in memory starting at location I.
-                    //The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
-                } else if (nnStr.equals("55")) {
-                    ldIFor(x);
+                    case 0x55:
+                        ldIFor(x);
+                        break;
 
                     //Fx65 - LD Vx, [I]
-                    //Read registers V0 through Vx from memory starting at location I.
-                    //The interpreter reads values from memory starting at location I into registers V0 through Vx.
-                } else if (nnStr.equals("65")) {
-                    ldIForRead(x);
+                    case 0x65:
+                        ldIForRead(x);
                 }
                 break;
+
             default:
-                throw new OpcodeUnimplementedException(instruction);
-
-
+                throw new OpcodeUnimplementedException(instruction.getByteCode());
         }
+    }
+
+    //Get all instructions from the program as a list of strings
+    List<String> preFetchInstructions() {
+        return null;
     }
 
     public void ret() {
@@ -348,7 +325,6 @@ public class CPU {
                 }
             }
         }
-        //display.repaint();
     }
 
 
@@ -388,7 +364,6 @@ public class CPU {
         //Java will cast all unsigned data to signed every chance it gets
         //All instruction implementations should follow this sort of design strategy of first converting our input values
         //into properly unsigned data within 8 bits.
-
         int val = nn & 0xFF; //Mask nibble nn to unsigned 8-bit value
         int vx = registers.variableRegisters[x] & 0xFF; //Get the current value of Vx and unsign it
         //Add the two values - we mask the result afterward because Java upcasts data to signed integers before math.

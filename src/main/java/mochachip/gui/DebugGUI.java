@@ -182,44 +182,48 @@ public class DebugGUI {
     //Update some debugger values when needed
     public void updateRegister(int address, int val) {
         if (frame.isVisible()) {
-            if (address <= 16) {
-                String regStr = String.format("%01X", address);
-                String valStr = String.format("%02X", (val & 0xFF));
-                registerViewerLabels[address].setText("V" + regStr + ": " + valStr);
-            }
+            SwingUtilities.invokeLater(() -> {
+                if (address <= 16) {
+                    String regStr = String.format("%01X", address);
+                    String valStr = String.format("%02X", (val & 0xFF));
+                    registerViewerLabels[address].setText("V" + regStr + ": " + valStr);
+                }
+            });
+
         }
     }
 
     public void updateRegister(RegisterType registerType, int val) {
         if (frame.isVisible()) {
-            if (registerType == RegisterType.I) {
-                String valStr = String.format("%04X", (val & 0xFFF));
-                registerILabel.setText("I: " + valStr);
-            } else if (registerType == RegisterType.DT) {
-                String valStr = String.format("%02X", (val & 0xFF));
-                registerDTLabel.setText("DT: " + valStr);
-            } else if (registerType == RegisterType.ST) {
-                String valStr = String.format("%02X", (val & 0xFF));
-                registerSTLabel.setText("ST: " + valStr);
-            } else if (registerType == RegisterType.PC) {
-                String valStr = String.format("%02X", (val & 0xFF));
-                registerPCLabel.setText("PC: " + valStr);
-            }
+            SwingUtilities.invokeLater(() -> {
+                if (registerType == RegisterType.I) {
+                    String valStr = String.format("%04X", (val & 0xFFF));
+                    registerILabel.setText("I: " + valStr);
+                } else if (registerType == RegisterType.DT) {
+                    String valStr = String.format("%02X", (val & 0xFF));
+                    registerDTLabel.setText("DT: " + valStr);
+                } else if (registerType == RegisterType.ST) {
+                    String valStr = String.format("%02X", (val & 0xFF));
+                    registerSTLabel.setText("ST: " + valStr);
+                } else if (registerType == RegisterType.PC) {
+                    String valStr = String.format("%02X", (val & 0xFF));
+                    registerPCLabel.setText("PC: " + valStr);
+                }
+            });
         }
-
     }
 
     public void updateStack(int index, int address) {
         if (frame.isVisible()) {
-            String indexStr = String.format("%01X", index);
-            if (address > -1) {
-                String addrStr = String.format("%04X", (address & 0xFFFF));
-                stackViewerLabels[index].setText(indexStr + ": " + addrStr);
-            } else {
-                stackViewerLabels[index].setText(indexStr + ": ");
-
-            }
-
+            SwingUtilities.invokeLater(() -> {
+                String indexStr = String.format("%01X", index);
+                if (address > -1) {
+                    String addrStr = String.format("%04X", (address & 0xFFFF));
+                    stackViewerLabels[index].setText(indexStr + ": " + addrStr);
+                } else {
+                    stackViewerLabels[index].setText(indexStr + ": ");
+                }
+            });
         }
     }
 
@@ -239,25 +243,27 @@ public class DebugGUI {
     }
 
     private void displayMemory() {
-        int memoryPerLine = 10;
-        memoryViewerTextArea.setText("");
-        byte[] memory = cpu.getMemory().getMemoryArray();
-        //Start printing values after unused memory
-        try {
-            for (int i = 512; i < cpu.getMemory().getMemoryArray().length; i++) {
-                String value = String.format("%02X", (memory[i] & 0xFF));
-                String address = String.format("$%04X", i);
-                if (i == 512 || (i - 0x200) % memoryPerLine == 0) {
-                    memoryViewerTextArea.append("\n" + address + ": ");
+        SwingUtilities.invokeLater(() -> {
+            int memoryPerLine = 10;
+            memoryViewerTextArea.setText("");
+            byte[] memory = cpu.getMemory().getMemoryArray();
+            //Start printing values after unused memory
+            try {
+                for (int i = 512; i < cpu.getMemory().getMemoryArray().length; i++) {
+                    String value = String.format("%02X", (memory[i] & 0xFF));
+                    String address = String.format("$%04X", i);
+                    if (i == 512 || (i - 0x200) % memoryPerLine == 0) {
+                        memoryViewerTextArea.append("\n" + address + ": ");
+                    }
+                    memoryViewerTextArea.append(String.format("%-3s", value));
                 }
-                //memoryViewerTextArea.append(value + " ");
-                memoryViewerTextArea.append(String.format("%-3s", value));
+            } catch (NumberFormatException e) {
+                System.out.println(e.getMessage());
             }
-        } catch (NumberFormatException e) {
-            System.out.println(e.getMessage());
-        }
 
-        memoryViewerTextArea.setCaretPosition(0);
+            memoryViewerTextArea.setCaretPosition(0);
+        });
+
     }
 
     private void displayRegisters() {

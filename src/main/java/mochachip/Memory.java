@@ -37,7 +37,6 @@ public class Memory {
     }
 
     public void initialize() {
-        //System.out.println("Initializing memory.");
         reserveMemoryForInterpreter();
         loadFontToMemory();
     }
@@ -51,19 +50,18 @@ public class Memory {
         byte val = (byte) (value & 0xFF);
         if (address >= 0 && address < MEMORY_SIZE) {
             memory[address] = val;
-            //System.out.printf("mochachip.Memory write at 0x%X: 0x%02X%n", address, value & 0xFF);
         } else {
             throw new IllegalArgumentException("Error with request to write memory at " + address
-                    + " with value " + value + ". mochachip.Memory address out of bounds.");
+                    + " with value " + value + ". Memory address out of bounds.");
         }
     }
 
     public byte read(int address) {
         if (address >= 0 && address < memory.length) {
-            return (byte) (memory[address] & 0xFF);
+            return memory[address];
         } else {
             throw new IllegalArgumentException("Error with request to read memory at " + address
-                    + ". mochachip.Memory address out of bounds.");
+                    + ". Memory address out of bounds.");
         }
     }
 
@@ -77,10 +75,6 @@ public class Memory {
         for (int i = 0; i < fontData.length; i++) {
             write(FONT_DATA_START_ADDRESS + i, fontData[i]);
         }
-        //System.out.println("Font data loaded into memory:");
-        for (int i = 0; i < fontData.length; i++) {
-            //System.out.printf("mochachip.Memory at 0x%X: 0x%02X%n", fontDataAddress + i, memory[fontDataAddress + i] & 0xFF);
-        }
     }
 
     public boolean loadChip8File(String filePath) {
@@ -91,7 +85,6 @@ public class Memory {
             if (bytesRead != buffer.length) {
                 System.out.println("Warning: Could not read the entire file");
             }
-            inputStream.read(buffer);
             loadProgramDataToMemory(buffer);
             //printMemoryMap();
             return true;
@@ -103,10 +96,6 @@ public class Memory {
 
     public void loadProgramDataToMemory(byte[] data) {
         System.arraycopy(data, 0, memory, PROGRAM_START_ADDRESS, data.length);
-        //System.out.println("Program data loaded into memory:");
-//        for (int i = 0; i < data.length; i++) {
-//            System.out.printf("mochachip.Memory at 0x%X: 0x%02X%n", PROGRAM_START_ADDRESS + i, memory[PROGRAM_START_ADDRESS + i] & 0xFF);
-//        }
     }
 
     public void printMemoryMap() {
@@ -122,14 +111,9 @@ public class Memory {
         return memory;
     }
 
-
-
     //Return an address in memory corresponding to a hex digit
     public int getAddressOfDigit(int digit) {
         return FONT_DATA_START_ADDRESS + (digit * 5);
     }
 
-    public static byte unsignByte(byte b) {
-        return (byte) (b & 0xFF);
-    }
 }
