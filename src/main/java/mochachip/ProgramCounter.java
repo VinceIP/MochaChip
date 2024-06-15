@@ -18,7 +18,7 @@ public class ProgramCounter {
     }
 
 
-    public void jump(int address){
+    public void jump(int address) {
         currentAddress = address;
     }
 
@@ -26,7 +26,7 @@ public class ProgramCounter {
         return currentAddress;
     }
 
-    public void setDebugGUI(DebugGUI debugGUI){
+    public void setDebugGUI(DebugGUI debugGUI) {
         this.debugGUI = debugGUI;
     }
 

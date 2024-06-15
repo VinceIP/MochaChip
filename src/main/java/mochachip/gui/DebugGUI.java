@@ -19,6 +19,7 @@ public class DebugGUI {
     private JPanel stackViewerPanel;
     private JPanel registerAndStackPanel;
     private JPanel instructionViewerPanel;
+    private JPanel stepModePanel;
     private JLabel[] registerViewerLabels;
     private JLabel[] stackViewerLabels;
     private CPU cpu;
@@ -26,6 +27,8 @@ public class DebugGUI {
     private JLabel registerDTLabel;
     private JLabel registerSTLabel;
     private JLabel registerPCLabel;
+    private JCheckBox stepModeCheckBox;
+    private JButton stepModeStepThroughButton;
     private List<Instruction> instructionList;
     private Object[][] instructionTableData;
 
@@ -164,10 +167,21 @@ public class DebugGUI {
             stackViewerPanel.add(stackViewerLabels[i]);
         }
 
+        //Step Mode
+        stepModePanel = new JPanel();
+        stepModePanel.setLayout(new BoxLayout(stepModePanel, BoxLayout.X_AXIS));
+        //stepModePanel.setMaximumSize(new Dimension(100,100));
+        stepModeCheckBox = new JCheckBox("Enable step mode: ");
+        stepModeStepThroughButton = new JButton("->");
+        stepModeStepThroughButton.setToolTipText("Step through");
+        stepModePanel.add(stepModeCheckBox);
+        stepModePanel.add(stepModeStepThroughButton);
+        instructionViewerPanel.add(stepModePanel);
+
         //Instruction panel properties
         instructionViewerPanel.add(instructionViewerTable);
         instructionViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        instructionViewerPanel.setLayout(new BorderLayout());
+        instructionViewerPanel.setLayout(new BoxLayout(instructionViewerPanel, BoxLayout.Y_AXIS));
 
         //Instruction table properties
         instructionViewerTable.setBackground(bgColor);
@@ -220,7 +234,7 @@ public class DebugGUI {
                     String valStr = String.format("%02X", (val & 0xFF));
                     registerSTLabel.setText("ST: " + valStr);
                 } else if (registerType == RegisterType.PC) {
-                    String valStr = String.format("%02X", (val & 0xFF));
+                    String valStr = String.format("%04X", val);
                     registerPCLabel.setText("PC: " + valStr);
                 }
             });
@@ -254,16 +268,17 @@ public class DebugGUI {
 
     public void initInstructionTable() {
         if (instructionList != null) {
-            instructionTableData = new Object[instructionList.size()][3];
+            instructionTableData = new Object[instructionList.size()][4];
             String[] instructionTableColumns = new String[]{
-                    "Address", "Instruction", "Description"
+                    "BRK", "Address", "Instruction", "Description"
             };
 
             for (int i = 0; i < instructionList.size(); i++) {
                 Instruction instruction = instructionList.get(i);
-                instructionTableData[i][0] = String.format("%04X", instruction.getAddress());
-                instructionTableData[i][1] = String.format("%04X", instruction.getByteCode());
-                instructionTableData[i][2] = instruction.getDescription();
+                instructionTableData[i][0] = instruction.isBreakpoint(); //Renders a red oval if isBreakpoint, per custom cell renderer
+                instructionTableData[i][1] = String.format("%04X", instruction.getAddress());
+                instructionTableData[i][2] = String.format("%04X", instruction.getByteCode());
+                instructionTableData[i][3] = instruction.getDescription();
             }
 
             TableModel tableModel = new TableModel() {
@@ -284,7 +299,8 @@ public class DebugGUI {
 
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
-                    return String.class;
+                    //If column index is 0, get column class as boolean for BRK, otherwise String
+                    return columnIndex == 0 ? Boolean.class : String.class;
                 }
 
                 @Override
@@ -312,12 +328,13 @@ public class DebugGUI {
             };
 
             instructionViewerTable.setModel(tableModel);
+            instructionViewerTable.getColumnModel().getColumn(0).setCellRenderer(new BreakpointCellRenderer());
+
+            instructionViewerTable.getColumnModel().getColumn(0).setPreferredWidth(30);
+            instructionViewerTable.getColumnModel().getColumn(0).setMaxWidth(30);
+            instructionViewerTable.getColumnModel().getColumn(0).setResizable(false);
 
         }
-
-    }
-
-    public void updateInstructionList(List<Instruction> instructionList) {
 
     }
 

@@ -8,6 +8,7 @@ public class Instruction {
     private byte nibble2;
     private byte nibble3;
     private boolean valid;
+    private boolean breakpoint = false;
     private String description;
 
     public Instruction(int address, int byteCode) {
@@ -57,6 +58,14 @@ public class Instruction {
 
     public String getDescription(){
         return description;
+    }
+
+    public void setBreakpoint(boolean val){
+        this.breakpoint = val;
+    }
+
+    public boolean isBreakpoint(){
+        return breakpoint;
     }
 
     public boolean isValid() {
@@ -196,10 +205,10 @@ public class Instruction {
                         description = String.format("LD B, V%01X", x);
                         return true;
                     case 0x55: // LD [I], Vx
-                        description = String.format("LD [I], V%01X", x);
+                        description = String.format("LD I, V%01X", x);
                         return true;
                     case 0x65: // LD V%01X, [I]
-                        description = String.format("LD V%01X, [I]", x);
+                        description = String.format("LD V%01X, I", x);
                         return true;
                 }
                 break;
