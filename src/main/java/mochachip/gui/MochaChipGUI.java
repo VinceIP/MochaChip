@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class MochaChipGUI {
@@ -184,6 +185,9 @@ public class MochaChipGUI {
             }
             if (cpu.getMemory().loadChip8File(filePath)) {
                 debugGUI.updateMemoryMap();
+                List<Instruction> instructionList = cpu.preFetchInstructions();
+                debugGUI.setInstructionList(instructionList);
+                debugGUI.initInstructionTable();
                 startEmulation();
             }
         } else if (returnValue == JFileChooser.ERROR_OPTION) {

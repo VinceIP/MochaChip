@@ -1,16 +1,20 @@
 package mochachip.gui;
 
 import mochachip.CPU;
+import mochachip.Instruction;
 import mochachip.Registers;
 
 import javax.swing.*;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.TableModel;
 import java.awt.*;
+import java.util.List;
 
 public class DebugGUI {
     private JFrame frame;
     private JPanel memoryViewerPanel;
     private JTextArea memoryViewerTextArea;
-    private JTextArea instructionViewerTextArea;
+    private JTable instructionViewerTable;
     private JPanel registerViewerPanel;
     private JPanel stackViewerPanel;
     private JPanel registerAndStackPanel;
@@ -22,6 +26,12 @@ public class DebugGUI {
     private JLabel registerDTLabel;
     private JLabel registerSTLabel;
     private JLabel registerPCLabel;
+    private List<Instruction> instructionList;
+    private Object[][] instructionTableData;
+
+    Color bgColor = new Color(25, 25, 25);
+    Color textColor = new Color(230, 230, 230);
+    Font font = new Font("Monospaced", Font.PLAIN, 12);
 
     public DebugGUI(CPU cpu) {
         this.cpu = cpu;
@@ -30,24 +40,25 @@ public class DebugGUI {
     }
 
     private void init() {
-        Color bgColor = new Color(25, 25, 25);
-        Color textColor = new Color(230, 230, 230);
-        Font font = new Font("Monospaced", Font.PLAIN, 12);
 
+
+        //Init main panels
         memoryViewerPanel = new JPanel();
         registerViewerPanel = new JPanel();
         stackViewerPanel = new JPanel();
-        registerAndStackPanel = new JPanel();
+        registerAndStackPanel = new JPanel(); //Parent for registry and stack
         instructionViewerPanel = new JPanel();
 
+        //Init text areas and tables
         memoryViewerTextArea = new JTextArea();
-        instructionViewerTextArea = new JTextArea();
+        instructionViewerTable = new JTable();
 
         //Memory viewer
         memoryViewerPanel.add(memoryViewerTextArea);
         memoryViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         memoryViewerPanel.setLayout(new BorderLayout());
 
+        //Memory viewer properties
         memoryViewerTextArea.setBackground(bgColor);
         memoryViewerTextArea.setForeground(textColor);
         memoryViewerTextArea.setFont(font);
@@ -56,24 +67,24 @@ public class DebugGUI {
         memoryViewerTextArea.setRows(10);
         memoryViewerTextArea.setLineWrap(false);
 
+        //Memory viewer scroll pane
         JScrollPane memoryViewerScrollPane = new JScrollPane(memoryViewerTextArea);
         memoryViewerScrollPane.setVerticalScrollBar(memoryViewerScrollPane.createVerticalScrollBar());
         memoryViewerPanel.add(memoryViewerScrollPane, BorderLayout.CENTER);
 
+        //RegisterAndStack properties
         registerAndStackPanel.setLayout(new GridLayout(2, 1, 5, 5));
         registerAndStackPanel.add(registerViewerPanel);
         registerAndStackPanel.add(stackViewerPanel);
 
-        //Register viewer
+        //Register viewer properties
         registerViewerPanel.setLayout(new GridLayout(0, 2, 25, 25));
         registerViewerPanel.setBackground(bgColor);
         registerViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel vRegistersPanel = new JPanel();
-        //vRegistersPanel.setLayout(new BoxLayout(vRegistersPanel, BoxLayout.Y_AXIS));
         vRegistersPanel.setLayout(new GridLayout(0, 2, 5, 5));
         vRegistersPanel.setBackground(bgColor);
-        //vRegistersPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         //left column: v registers
         JLabel registerViewerVHeader = new JLabel();
@@ -84,6 +95,7 @@ public class DebugGUI {
         vRegistersPanel.add(registerViewerVHeader);
         vRegistersPanel.add(Box.createVerticalStrut(5));
 
+        //Init labels for registers
         registerViewerLabels = new JLabel[16];
 
         for (int i = 0; i < 16; i++) {
@@ -102,16 +114,15 @@ public class DebugGUI {
         JPanel additionalRegistersPanel = new JPanel();
         additionalRegistersPanel.setLayout(new GridLayout(0, 1, 5, 5));
         additionalRegistersPanel.setBackground(bgColor);
-        //additionalRegistersPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         additionalRegistersPanel.add(Box.createVerticalStrut(1));
 
+        //Init labels for additional registers
         registerILabel = new JLabel("I: 00");
         registerILabel.setHorizontalAlignment(JLabel.LEFT);
         registerILabel.setForeground(textColor);
         registerILabel.setFont(font);
         additionalRegistersPanel.add(registerILabel);
-
 
         registerDTLabel = new JLabel("DT: 00");
         registerDTLabel.setHorizontalAlignment(JLabel.LEFT);
@@ -129,12 +140,11 @@ public class DebugGUI {
         registerPCLabel.setHorizontalAlignment(JLabel.LEFT);
         registerPCLabel.setForeground(textColor);
         registerPCLabel.setFont(font);
-        //additionalRegistersPanel.add(Box.createVerticalStrut(10));
         additionalRegistersPanel.add(registerPCLabel);
 
         registerViewerPanel.add(additionalRegistersPanel);
 
-        //Stack
+        //Stack panel properties
         stackViewerPanel.setBackground(bgColor);
         stackViewerPanel.setLayout(new GridLayout(0, 2, 5, 5));
         stackViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -144,30 +154,34 @@ public class DebugGUI {
         stackViewerPanel.add(stackHeaderLabel);
         stackViewerPanel.add(Box.createVerticalStrut(20));
 
+        //Init labels for stack viewer
         stackViewerLabels = new JLabel[16];
         for (int i = 0; i < 16; i++) {
             String addr = String.format("%01X", i);
             stackViewerLabels[i] = new JLabel(addr + ": ");
             stackViewerLabels[i].setForeground(textColor);
             stackViewerLabels[i].setFont(font);
-            //stackViewerLabels[i].setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
             stackViewerPanel.add(stackViewerLabels[i]);
         }
 
-        instructionViewerPanel.add(instructionViewerTextArea);
+        //Instruction panel properties
+        instructionViewerPanel.add(instructionViewerTable);
         instructionViewerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         instructionViewerPanel.setLayout(new BorderLayout());
 
-        instructionViewerTextArea.setBackground(bgColor);
-        instructionViewerTextArea.setEditable(false);
-        instructionViewerTextArea.setColumns(20);
-        instructionViewerTextArea.setRows(10);
-        instructionViewerTextArea.setLineWrap(false);
+        //Instruction table properties
+        instructionViewerTable.setBackground(bgColor);
+        instructionViewerTable.setForeground(textColor);
+        instructionViewerTable.setFont(font);
 
-        JScrollPane instructionViewerScrollPane = new JScrollPane(instructionViewerTextArea);
+
+        //Instruction panel scroll pane
+        JScrollPane instructionViewerScrollPane = new JScrollPane(instructionViewerTable);
         instructionViewerScrollPane.setVerticalScrollBar(instructionViewerScrollPane.createVerticalScrollBar());
         instructionViewerPanel.add(instructionViewerScrollPane, BorderLayout.CENTER);
 
+
+        //Setup whole frame and finish
         frame.setLayout(new GridLayout(1, 3, 5, 5));
         frame.add(memoryViewerPanel);
         frame.add(registerAndStackPanel);
@@ -238,6 +252,79 @@ public class DebugGUI {
         displayMemory();
     }
 
+    public void initInstructionTable() {
+        if (instructionList != null) {
+            instructionTableData = new Object[instructionList.size()][3];
+            String[] instructionTableColumns = new String[]{
+                    "Address", "Instruction", "Description"
+            };
+
+            for (int i = 0; i < instructionList.size(); i++) {
+                Instruction instruction = instructionList.get(i);
+                instructionTableData[i][0] = String.format("%04X", instruction.getAddress());
+                instructionTableData[i][1] = String.format("%04X", instruction.getByteCode());
+                instructionTableData[i][2] = instruction.getDescription();
+            }
+
+            TableModel tableModel = new TableModel() {
+                @Override
+                public int getRowCount() {
+                    return instructionTableData.length;
+                }
+
+                @Override
+                public int getColumnCount() {
+                    return instructionTableColumns.length;
+                }
+
+                @Override
+                public String getColumnName(int columnIndex) {
+                    return instructionTableColumns[columnIndex];
+                }
+
+                @Override
+                public Class<?> getColumnClass(int columnIndex) {
+                    return String.class;
+                }
+
+                @Override
+                public boolean isCellEditable(int rowIndex, int columnIndex) {
+                    return false;
+                }
+
+                @Override
+                public Object getValueAt(int rowIndex, int columnIndex) {
+                    return instructionTableData[rowIndex][columnIndex];
+                }
+
+                @Override
+                public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+                    instructionTableData[rowIndex][columnIndex] = aValue;
+                }
+
+                @Override
+                public void addTableModelListener(TableModelListener l) {
+                }
+
+                @Override
+                public void removeTableModelListener(TableModelListener l) {
+                }
+            };
+
+            instructionViewerTable.setModel(tableModel);
+
+        }
+
+    }
+
+    public void updateInstructionList(List<Instruction> instructionList) {
+
+    }
+
+    public void setInstructionList(List<Instruction> instructionList) {
+        this.instructionList = instructionList;
+    }
+
     public JFrame getFrame() {
         return frame;
     }
@@ -272,7 +359,6 @@ public class DebugGUI {
 
 
     private void displayInstructions() {
-        instructionViewerTextArea.setText("Instructions:\n");
     }
 
     public void setCpu(CPU cpu) {

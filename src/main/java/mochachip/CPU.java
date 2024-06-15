@@ -2,6 +2,7 @@ package mochachip;
 
 import mochachip.gui.DebugGUI;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -17,7 +18,7 @@ public class CPU {
     boolean waitingForKeyPress = false;
     int waitingRegister;
     DebugGUI debugGUI;
-    List<String> instructionList;
+    List<Instruction> instructionList;
 
     public CPU(Input input, Display display) {
         this.display = display;
@@ -26,7 +27,11 @@ public class CPU {
 
     public void start() {
         running = true;
-        int sleepTimeNanos = 1000;
+        int sleepTimeNanos = 0;
+        long sleepTimeMillis = 1;
+        preFetchInstructions();
+        printInstructionList(instructionList);
+
         while (running) {
             registers.update();
             if (!waitingForKeyPress) cycle();
@@ -39,11 +44,12 @@ public class CPU {
                 }
             }
             try {
-                Thread.sleep(0, sleepTimeNanos);
+                Thread.sleep(sleepTimeMillis, sleepTimeNanos);
             } catch (InterruptedException e) {
                 //
             }
         }
+
     }
 
     public void stop() {
@@ -80,8 +86,9 @@ public class CPU {
         int byte2 = memory.read(programCounter.getCurrentAddress() + 1) & 0xFF;
         //Shift the first byte to the upper 16-bits/left half, then OR with byte2 to combine the 2 bytes
         int byteCode = (byte1 << 8) | byte2;
+        Instruction instruction = new Instruction(programCounter.getCurrentAddress(), byteCode);
         programCounter.incrementPC();
-        return new Instruction(byteCode);
+        return instruction;
     }
 
     public void decode(Instruction instruction) {
@@ -292,9 +299,23 @@ public class CPU {
         }
     }
 
-    //Get all instructions from the program as a list of strings
-    List<String> preFetchInstructions() {
-        return null;
+    //Get all instructions from the program as a list
+    public List<Instruction> preFetchInstructions() {
+        instructionList = new ArrayList<>();
+        while (programCounter.currentAddress < 4094) {
+            Instruction instruction = fetchInstruction();
+            if(instruction.validateInstruction()){
+                instructionList.add(instruction);
+            }
+        }
+        programCounter.currentAddress = Memory.PROGRAM_START_ADDRESS;
+        return instructionList;
+    }
+
+    public void printInstructionList(List<Instruction> instructions){
+        for(Instruction i: instructions){
+            System.out.println(i.toString());
+        }
     }
 
     public void ret() {
