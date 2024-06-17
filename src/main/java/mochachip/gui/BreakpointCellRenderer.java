@@ -6,7 +6,8 @@ import java.awt.*;
 
 public class BreakpointCellRenderer extends DefaultTableCellRenderer {
     @Override
-    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                                                   int row, int column) {
         JPanel panel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {

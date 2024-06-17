@@ -19,7 +19,7 @@ public class MochaChipGUI {
     private Input input;
     private Display display;
     private CPU cpu;
-    private Thread emulationThread;
+    Thread emulationThread;
     private JFrame frame;
     private DebugGUI debugGUI;
 
@@ -31,7 +31,7 @@ public class MochaChipGUI {
         frame = new JFrame();
         version = getVersion();
         init();
-        this.debugGUI = new DebugGUI(cpu);
+        this.debugGUI = new DebugGUI(cpu, this);
     }
 
     public void init() {
@@ -167,21 +167,24 @@ public class MochaChipGUI {
             cpu = new CPU(input, display);
             cpu.reset();
             boolean wasOpen = false;
+            boolean wasStepMode = false;
             Dimension prevDim = null;
             Point prevPoint = null;
             if (debugGUI != null && debugGUI.getFrame().isVisible()) {
                 wasOpen = true;
+                if (debugGUI.isStepMode()) wasStepMode = true;
                 prevDim = debugGUI.getFrame().getSize();
                 prevPoint = debugGUI.getFrame().getLocation();
                 debugGUI.getFrame().setVisible(false);
             }
-            this.debugGUI = new DebugGUI(cpu);
+            this.debugGUI = new DebugGUI(cpu, this);
             debugGUI.setCpu(cpu);
             cpu.setDebugGUI(debugGUI);
             if (wasOpen && !debugGUI.getFrame().isVisible()) {
                 debugGUI.getFrame().setSize(prevDim);
                 debugGUI.getFrame().setLocation(prevPoint);
                 debugGUI.getFrame().setVisible(true);
+                if (wasStepMode) debugGUI.setStepMode(true);
             }
             if (cpu.getMemory().loadChip8File(filePath)) {
                 debugGUI.updateMemoryMap();

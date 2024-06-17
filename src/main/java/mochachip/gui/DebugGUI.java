@@ -11,6 +11,7 @@ import java.awt.*;
 import java.util.List;
 
 public class DebugGUI {
+    private MochaChipGUI mochaChipGUI;
     private JFrame frame;
     private JPanel memoryViewerPanel;
     private JTextArea memoryViewerTextArea;
@@ -31,12 +32,15 @@ public class DebugGUI {
     private JButton stepModeStepThroughButton;
     private List<Instruction> instructionList;
     private Object[][] instructionTableData;
+    private Instruction currentInstruction;
+    private boolean stepMode = false;
 
     Color bgColor = new Color(25, 25, 25);
     Color textColor = new Color(230, 230, 230);
     Font font = new Font("Monospaced", Font.PLAIN, 12);
 
-    public DebugGUI(CPU cpu) {
+    public DebugGUI(CPU cpu, MochaChipGUI mochaChipGUI) {
+        this.mochaChipGUI = mochaChipGUI;
         this.cpu = cpu;
         frame = new JFrame();
         init();
@@ -172,8 +176,10 @@ public class DebugGUI {
         stepModePanel.setLayout(new BoxLayout(stepModePanel, BoxLayout.X_AXIS));
         //stepModePanel.setMaximumSize(new Dimension(100,100));
         stepModeCheckBox = new JCheckBox("Enable step mode: ");
+        stepModeCheckBox.addActionListener(e -> toggleStepMode());
         stepModeStepThroughButton = new JButton("->");
         stepModeStepThroughButton.setToolTipText("Step through");
+        stepModeStepThroughButton.addActionListener(e -> stepThrough());
         stepModePanel.add(stepModeCheckBox);
         stepModePanel.add(stepModeStepThroughButton);
         instructionViewerPanel.add(stepModePanel);
@@ -266,6 +272,9 @@ public class DebugGUI {
         displayMemory();
     }
 
+    public void updateCurrentInstruction() {
+    }
+
     public void initInstructionTable() {
         if (instructionList != null) {
             instructionTableData = new Object[instructionList.size()][4];
@@ -329,6 +338,9 @@ public class DebugGUI {
 
             instructionViewerTable.setModel(tableModel);
             instructionViewerTable.getColumnModel().getColumn(0).setCellRenderer(new BreakpointCellRenderer());
+            instructionViewerTable.getColumnModel().getColumn(1).setCellRenderer(new HighlightedCellRenderer(this));
+            instructionViewerTable.getColumnModel().getColumn(2).setCellRenderer(new HighlightedCellRenderer(this));
+            instructionViewerTable.getColumnModel().getColumn(3).setCellRenderer(new HighlightedCellRenderer(this));
 
             instructionViewerTable.getColumnModel().getColumn(0).setPreferredWidth(30);
             instructionViewerTable.getColumnModel().getColumn(0).setMaxWidth(30);
@@ -380,5 +392,47 @@ public class DebugGUI {
 
     public void setCpu(CPU cpu) {
         this.cpu = cpu;
+    }
+
+    private void toggleStepMode() {
+        stepMode = !stepMode;
+        if (!stepMode) {
+            instructionViewerTable.setRowSelectionAllowed(true);
+            if (mochaChipGUI.emulationThread != null && mochaChipGUI.emulationThread.isAlive()) {
+                mochaChipGUI.emulationThread.interrupt();
+            }
+            mochaChipGUI.emulationThread = new Thread(() -> cpu.start());
+            mochaChipGUI.emulationThread.start();
+        } else {
+            instructionViewerTable.setRowSelectionAllowed(false);
+        }
+
+    }
+
+    private void stepThrough() {
+        if (currentInstruction == null) cpu.prepareCycle();
+        else {
+            cpu.cycle();
+            cpu.prepareCycle();
+        }
+    }
+
+
+    public boolean isStepMode() {
+        return stepMode;
+    }
+
+    public void setStepMode(boolean val) {
+        this.stepMode = val;
+        stepModeCheckBox.setSelected(val);
+    }
+
+    public Instruction getCurrentInstruction() {
+        return currentInstruction;
+    }
+
+    public void setCurrentInstruction(Instruction currentInstruction) {
+        this.currentInstruction = currentInstruction;
+        instructionViewerTable.repaint();
     }
 }

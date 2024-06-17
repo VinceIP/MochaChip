@@ -19,6 +19,7 @@ public class CPU {
     int waitingRegister;
     DebugGUI debugGUI;
     List<Instruction> instructionList;
+    private Instruction currentInstruction;
 
     public CPU(Input input, Display display) {
         this.display = display;
@@ -29,13 +30,17 @@ public class CPU {
         running = true;
         int sleepTimeNanos = 0;
         long sleepTimeMillis = 1;
-        preFetchInstructions();
-        printInstructionList(instructionList);
+        if (instructionList == null) {
+            preFetchInstructions();
+            printInstructionList(instructionList);
+        }
 
-        while (running) {
+        while (running && !debugGUI.isStepMode()) {
             registers.update();
-            if (!waitingForKeyPress) cycle();
-            else {
+            if (!waitingForKeyPress) {
+                prepareCycle();
+                cycle();
+            } else {
                 if (input.isAnyKeyPressed()) {
                     registers.variableRegisters[waitingRegister] = (byte) input.getLastKeyPressed();
                     input.resetLastKeyPressed();
@@ -49,7 +54,6 @@ public class CPU {
                 //
             }
         }
-
     }
 
     public void stop() {
@@ -70,8 +74,15 @@ public class CPU {
         this.timer = new Timer();
     }
 
+    public void prepareCycle() {
+        currentInstruction = fetchInstruction();
+        this.currentInstruction = currentInstruction;
+        if (debugGUI.getFrame().isVisible()) {
+            debugGUI.setCurrentInstruction(currentInstruction);
+        }
+    }
+
     public void cycle() {
-        Instruction currentInstruction = fetchInstruction();
         decode(currentInstruction);
     }
 
@@ -304,7 +315,7 @@ public class CPU {
         instructionList = new ArrayList<>();
         while (programCounter.currentAddress < 4094) {
             Instruction instruction = fetchInstruction();
-            if(instruction.validateInstruction()){
+            if (instruction.validateInstruction()) {
                 instructionList.add(instruction);
             }
         }
@@ -312,8 +323,8 @@ public class CPU {
         return instructionList;
     }
 
-    public void printInstructionList(List<Instruction> instructions){
-        for(Instruction i: instructions){
+    public void printInstructionList(List<Instruction> instructions) {
+        for (Instruction i : instructions) {
             System.out.println(i.toString());
         }
     }
