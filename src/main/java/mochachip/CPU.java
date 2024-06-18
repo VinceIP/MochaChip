@@ -373,20 +373,24 @@ public class CPU {
         programCounter.jump(nnn + vx);
     }
 
-    public void seCompareByte(int x, byte nn) {
+    public void seCompareByte(int x, int nn) {
         int vx = registers.variableRegisters[x] & 0xFF;
-        if (vx == nn) programCounter.incrementPC();
+        int val = nn & 0xFF;
+        if (vx == val) programCounter.incrementPC();
     }
 
     public void seCompareRegister(int x, int y) {
-        if (registers.variableRegisters[x] == registers.variableRegisters[y]) {
+        int vx = registers.variableRegisters[x] & 0xFF;
+        int vy = registers.variableRegisters[y] & 0xFF;
+        if (vx == vy) {
             programCounter.incrementPC();
         }
     }
 
-    public void sne(int x, byte nn) {
+    public void sne(int x, int nn) {
         int vx = registers.variableRegisters[x] & 0xFF;
-        if (vx != nn) programCounter.incrementPC();
+        int val = nn & 0xFF;
+        if (vx != val) programCounter.incrementPC();
     }
 
     public void sneRegister(int x, int y) {
@@ -477,16 +481,18 @@ public class CPU {
     }
 
     public void ldDelayTimer(int x) {
-        registers.setVariableRegister(x, registers.delayTimer);
+        int val = registers.delayTimer & 0xFF;
+        registers.setVariableRegister(x, val);
     }
 
     public void ldDelayTimerFromRegister(int x) {
-        //Copying bytes to bytes - probably don't need masking for this
-        registers.setDelayTimer(registers.variableRegisters[x]);
+        int vx = registers.variableRegisters[x] & 0xFF;
+        registers.setDelayTimer(vx);
     }
 
     public void ldSoundTimer(int x) {
-        registers.setSoundTimer(registers.variableRegisters[x]);
+        int vx = registers.variableRegisters[x] & 0xFF;
+        registers.setSoundTimer(vx);
     }
 
     public void ldKey(int x) {
@@ -552,7 +558,8 @@ public class CPU {
 
     public void rnd(int x, int nn) {
         int rand = ThreadLocalRandom.current().nextInt(0, 255) & 0xFF;
-        int result = (rand & (nn & 0xFF)) & 0xFF;
+        int val = nn & 0xFF;
+        int result = (rand & val) & 0xFF;
         registers.setVariableRegister(x, result);
     }
 

@@ -26,8 +26,15 @@ public class Registers {
     //Called 60 times per second
     public void update() {
         //Timers always decrementing if not zero
-        if (delayTimer > 0) delayTimer--;
-        if (soundTimer > 0) soundTimer--;
+        if ((delayTimer & 0xFF) > 0) {
+            delayTimer--;
+            debugGUI.updateRegister(DebugGUI.RegisterType.DT, delayTimer);
+        }
+        if ((soundTimer & 0xFF) > 0) {
+            soundTimer--;
+            debugGUI.updateRegister(DebugGUI.RegisterType.ST, soundTimer);
+
+        }
     }
 
     public byte getDelayTimer() {
@@ -50,30 +57,30 @@ public class Registers {
         return variableRegisters;
     }
 
-    public byte getVariableRegister(int index){
+    public byte getVariableRegister(int index) {
         return (byte) (variableRegisters[index] & 0xFF);
     }
 
     public void setVariableRegister(int index, int value) {
         variableRegisters[index] = (byte) (value & 0xFF);
-        debugGUI.updateRegister(index,value);
+        debugGUI.updateRegister(index, value);
     }
 
-    public void setIndexRegister(int value){
+    public void setIndexRegister(int value) {
         indexRegister = (value & 0xFFF);
         debugGUI.updateRegister(DebugGUI.RegisterType.I, value);
     }
 
-    public void setDelayTimer(int value){
-        delayTimer = (byte)(value & 0xFF);
+    public void setDelayTimer(int value) {
+        delayTimer = (byte) (value & 0xFF);
         debugGUI.updateRegister(DebugGUI.RegisterType.DT, value);
     }
 
-    public void setSoundTimer(int value){
-        soundTimer = (byte)(value & 0xFF);
+    public void setSoundTimer(int value) {
+        soundTimer = (byte) (value & 0xFF);
     }
 
-    public void setDebugGUI(DebugGUI debugGUI){
+    public void setDebugGUI(DebugGUI debugGUI) {
         this.debugGUI = debugGUI;
     }
 }

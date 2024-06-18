@@ -17,6 +17,11 @@ public class ProgramCounter {
         debugGUI.updateRegister(DebugGUI.RegisterType.PC, currentAddress);
     }
 
+    public void decrementPC(){
+        currentAddress -= 2;
+        debugGUI.updateRegister(DebugGUI.RegisterType.PC, currentAddress);
+    }
+
 
     public void jump(int address) {
         currentAddress = address;
