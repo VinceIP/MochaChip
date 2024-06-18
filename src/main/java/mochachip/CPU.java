@@ -369,11 +369,13 @@ public class CPU {
     }
 
     public void jpTo(int nnn) {
-        programCounter.jump(nnn + registers.variableRegisters[0]);
+        int vx = registers.variableRegisters[0] & 0xFF;
+        programCounter.jump(nnn + vx);
     }
 
     public void seCompareByte(int x, byte nn) {
-        if (registers.variableRegisters[x] == nn) programCounter.incrementPC();
+        int vx = registers.variableRegisters[x] & 0xFF;
+        if (vx == nn) programCounter.incrementPC();
     }
 
     public void seCompareRegister(int x, int y) {
@@ -383,7 +385,8 @@ public class CPU {
     }
 
     public void sne(int x, byte nn) {
-        if (registers.variableRegisters[x] != nn) programCounter.incrementPC();
+        int vx = registers.variableRegisters[x] & 0xFF;
+        if (vx != nn) programCounter.incrementPC();
     }
 
     public void sneRegister(int x, int y) {

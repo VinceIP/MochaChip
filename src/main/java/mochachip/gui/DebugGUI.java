@@ -412,6 +412,7 @@ public class DebugGUI {
     private void stepThrough() {
         if (currentInstruction == null) cpu.prepareCycle();
         else {
+            System.out.println(currentInstruction.toString());
             cpu.cycle();
             cpu.prepareCycle();
         }
