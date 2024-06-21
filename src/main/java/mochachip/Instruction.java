@@ -3,40 +3,43 @@ package mochachip;
 public class Instruction {
     private final int byteCode;
     private int address;
-    private byte opcode;
-    private byte nibble1;
-    private byte nibble2;
-    private byte nibble3;
+    private int opcode;
+    private int nibble1;
+    private int nibble2;
+    private int nibble3;
     private boolean valid;
     private boolean breakpoint = false;
     private String description;
 
     public Instruction(int address, int byteCode) {
         this.address = address;
+        if((this.address % 2 != 0)){
+            System.out.println(String.format("Middle of the road instr at addr %04X", this.address));
+        }
         this.byteCode = byteCode;
         parse();
     }
 
     private void parse() {
-        this.opcode = (byte) ((byteCode & 0xF000) >> 12);
-        this.nibble1 = (byte) ((byteCode & 0x0F00) >> 8);
-        this.nibble2 = (byte) ((byteCode & 0x00F0) >> 4);
-        this.nibble3 = (byte) (byteCode & 0x000F);
+        this.opcode = (byteCode & 0xF000) >> 12;
+        this.nibble1 = (byteCode & 0x0F00) >> 8;
+        this.nibble2 = (byteCode & 0x00F0) >> 4;
+        this.nibble3 = byteCode & 0x000F;
     }
 
-    public byte getOpcode() {
+    public int getOpcode() {
         return opcode;
     }
 
-    public byte getNibble1() {
+    public int getNibble1() {
         return nibble1;
     }
 
-    public byte getNibble2() {
+    public int getNibble2() {
         return nibble2;
     }
 
-    public byte getNibble3() {
+    public int getNibble3() {
         return nibble3;
     }
 
@@ -44,8 +47,8 @@ public class Instruction {
         return byteCode;
     }
 
-    public byte getNN() {
-        return (byte) (byteCode & 0x00FF);
+    public int getNN() {
+        return (byte) (byteCode & 0xFF);
     }
 
     public int getNNN() {
@@ -56,15 +59,15 @@ public class Instruction {
         return address;
     }
 
-    public String getDescription(){
+    public String getDescription() {
         return description;
     }
 
-    public void setBreakpoint(boolean val){
+    public void setBreakpoint(boolean val) {
         this.breakpoint = val;
     }
 
-    public boolean isBreakpoint(){
+    public boolean isBreakpoint() {
         return breakpoint;
     }
 
@@ -82,10 +85,10 @@ public class Instruction {
     //It's possible that a series of bytes meant to be sprite data could be read as valid instructions, but this should
     //be okay enough - validation will stop the first time we encounter invalid instructions
     public boolean validateInstruction() {
-        byte opCode = getOpcode();
-        byte x = getNibble1();
-        byte y = getNibble2();
-        byte n = getNibble3();
+        int opCode = getOpcode();
+        int x = getNibble1();
+        int y = getNibble2();
+        int n = getNibble3();
         int nn = getNN();
         int nnn = getNNN();
 
@@ -112,16 +115,16 @@ public class Instruction {
                 description = String.format("JP V0, %03X", nnn);
                 return true; // Instructions with nnn
             case 0x3: // SE Vx, byte
-                description = String.format("SE V%01X, %02X", x, nn& 0xFF);
+                description = String.format("SE V%01X, %02X", x, nn & 0xFF);
                 return true;
             case 0x4: // SNE Vx, byte
-                description = String.format("SNE V%01X, %02X", x, nn& 0xFF);
+                description = String.format("SNE V%01X, %02X", x, nn & 0xFF);
                 return true;
             case 0x6: // LD Vx, byte
-                description = String.format("LD V%01X, %02X", x, nn& 0xFF);
+                description = String.format("LD V%01X, %02X", x, nn & 0xFF);
                 return true;
             case 0x7: // ADD Vx, byte
-                description = String.format("ADD V%01X, %02X", x, nn& 0xFF);
+                description = String.format("ADD V%01X, %02X", x, nn & 0xFF);
                 return true;
             case 0xC: // RND Vx, byte
                 description = String.format("RND V%01X, %02X", x, nn & 0xFF);
@@ -176,7 +179,7 @@ public class Instruction {
                 if ((nn & 0xFF) == 0x9E) {
                     description = String.format("SKP V%01X", x);
                     return true;
-                } else if ((nn& 0xFF) == 0xA1) {
+                } else if ((nn & 0xFF) == 0xA1) {
                     description = String.format("SKNP V%01X", x);
                     return true;
                 }

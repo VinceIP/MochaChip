@@ -2,13 +2,13 @@ package mochachip.gui;
 
 import mochachip.CPU;
 import mochachip.Instruction;
-import mochachip.Registers;
 
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import java.awt.*;
 import java.util.List;
+import java.util.Optional;
 
 public class DebugGUI {
     private MochaChipGUI mochaChipGUI;
@@ -23,6 +23,7 @@ public class DebugGUI {
     private JPanel stepModePanel;
     private JLabel[] registerViewerLabels;
     private JLabel[] stackViewerLabels;
+    private JScrollPane instructionViewerScrollPane;
     private CPU cpu;
     private JLabel registerILabel;
     private JLabel registerDTLabel;
@@ -196,7 +197,7 @@ public class DebugGUI {
 
 
         //Instruction panel scroll pane
-        JScrollPane instructionViewerScrollPane = new JScrollPane(instructionViewerTable);
+        instructionViewerScrollPane = new JScrollPane(instructionViewerTable);
         instructionViewerScrollPane.setVerticalScrollBar(instructionViewerScrollPane.createVerticalScrollBar());
         instructionViewerPanel.add(instructionViewerScrollPane, BorderLayout.CENTER);
 
@@ -213,7 +214,7 @@ public class DebugGUI {
         frame.pack();
     }
 
-    //Update some debugger values when needed
+    //Called by the CPU when register values are changed
     public void updateRegister(int address, int val) {
         if (frame.isVisible()) {
             SwingUtilities.invokeLater(() -> {
@@ -247,6 +248,7 @@ public class DebugGUI {
         }
     }
 
+    //Called by Stack when values are changed
     public void updateStack(int index, int address) {
         if (frame.isVisible()) {
             SwingUtilities.invokeLater(() -> {
@@ -272,16 +274,16 @@ public class DebugGUI {
         displayMemory();
     }
 
-    public void updateCurrentInstruction() {
-    }
-
+    //Initializes the instruction table
     public void initInstructionTable() {
         if (instructionList != null) {
+            //Set columns
             instructionTableData = new Object[instructionList.size()][4];
             String[] instructionTableColumns = new String[]{
                     "BRK", "Address", "Instruction", "Description"
             };
 
+            //Create a row for each instruction found in the program
             for (int i = 0; i < instructionList.size(); i++) {
                 Instruction instruction = instructionList.get(i);
                 instructionTableData[i][0] = instruction.isBreakpoint(); //Renders a red oval if isBreakpoint, per custom cell renderer
@@ -290,6 +292,7 @@ public class DebugGUI {
                 instructionTableData[i][3] = instruction.getDescription();
             }
 
+            //Table model overrides
             TableModel tableModel = new TableModel() {
                 @Override
                 public int getRowCount() {
@@ -336,6 +339,7 @@ public class DebugGUI {
                 }
             };
 
+            //Set column properties
             instructionViewerTable.setModel(tableModel);
             instructionViewerTable.getColumnModel().getColumn(0).setCellRenderer(new BreakpointCellRenderer());
             instructionViewerTable.getColumnModel().getColumn(1).setCellRenderer(new HighlightedCellRenderer(this));
@@ -358,6 +362,7 @@ public class DebugGUI {
         return frame;
     }
 
+    //Print memory to memory viewer
     private void displayMemory() {
         SwingUtilities.invokeLater(() -> {
             int memoryPerLine = 10;
@@ -365,6 +370,7 @@ public class DebugGUI {
             byte[] memory = cpu.getMemory().getMemoryArray();
             //Start printing values after unused memory
             try {
+                //Format each value, add a line break every 10 values
                 for (int i = 512; i < cpu.getMemory().getMemoryArray().length; i++) {
                     String value = String.format("%02X", (memory[i] & 0xFF));
                     String address = String.format("$%04X", i);
@@ -382,22 +388,16 @@ public class DebugGUI {
 
     }
 
-    private void displayRegisters() {
-        Registers registers = cpu.getRegisters();
-    }
-
-
-    private void displayInstructions() {
-    }
-
     public void setCpu(CPU cpu) {
         this.cpu = cpu;
     }
 
+    //Toggle step mode when checkbox is clicked
     private void toggleStepMode() {
         stepMode = !stepMode;
         if (!stepMode) {
             instructionViewerTable.setRowSelectionAllowed(true);
+            //Interrupt or restart emulation thread on toggle
             if (mochaChipGUI.emulationThread != null && mochaChipGUI.emulationThread.isAlive()) {
                 mochaChipGUI.emulationThread.interrupt();
             }
@@ -409,12 +409,27 @@ public class DebugGUI {
 
     }
 
+    //Cycle one instruction at a time
     private void stepThrough() {
         if (currentInstruction == null) cpu.prepareCycle();
         else {
-            System.out.println(currentInstruction.toString());
+            //Run a cycle, then prepare the next one
             cpu.cycle();
             cpu.prepareCycle();
+
+            //Find the proper index of the currently highlighted cell
+            int currentAddress = currentInstruction.getAddress();
+            Optional<Instruction> matchingInstruction = instructionList.stream()
+                    .filter(instruction -> instruction.getAddress() == currentAddress)
+                    .findFirst();
+            if (matchingInstruction.isPresent()) {
+                //Get rect of the target cell and scroll to it
+                int rowIndex = instructionList.indexOf(matchingInstruction.get());
+                Rectangle rect = instructionViewerTable.getCellRect(rowIndex, 1, true);
+                instructionViewerTable.scrollRectToVisible(rect);
+            }
+
+
         }
     }
 

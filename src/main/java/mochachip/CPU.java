@@ -105,11 +105,11 @@ public class CPU {
     public void decode(Instruction instruction) {
 
         //Get each value of the byteCode to be used in decoding
-        byte opCode = instruction.getOpcode();
-        byte x = instruction.getNibble1();
-        byte y = instruction.getNibble2();
-        byte n = instruction.getNibble3();
-        byte nn = instruction.getNN();
+        int opCode = instruction.getOpcode();
+        int x = instruction.getNibble1();
+        int y = instruction.getNibble2();
+        int n = instruction.getNibble3();
+        int nn = instruction.getNN();
         int nnn = instruction.getNNN();
 
         switch (opCode) {
