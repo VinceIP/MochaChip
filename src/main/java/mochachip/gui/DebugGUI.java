@@ -179,6 +179,7 @@ public class DebugGUI {
         stepModeCheckBox = new JCheckBox("Enable step mode: ");
         stepModeCheckBox.addActionListener(e -> toggleStepMode());
         stepModeStepThroughButton = new JButton("->");
+        stepModeStepThroughButton.setEnabled(false);
         stepModeStepThroughButton.setToolTipText("Step through");
         stepModeStepThroughButton.addActionListener(e -> stepThrough());
         stepModePanel.add(stepModeCheckBox);
@@ -397,6 +398,7 @@ public class DebugGUI {
         stepMode = !stepMode;
         if (!stepMode) {
             instructionViewerTable.setRowSelectionAllowed(true);
+            stepModeStepThroughButton.setEnabled(false);
             //Interrupt or restart emulation thread on toggle
             if (mochaChipGUI.emulationThread != null && mochaChipGUI.emulationThread.isAlive()) {
                 mochaChipGUI.emulationThread.interrupt();
@@ -404,6 +406,7 @@ public class DebugGUI {
             mochaChipGUI.emulationThread = new Thread(() -> cpu.start());
             mochaChipGUI.emulationThread.start();
         } else {
+            stepModeStepThroughButton.setEnabled(true);
             instructionViewerTable.setRowSelectionAllowed(false);
         }
 

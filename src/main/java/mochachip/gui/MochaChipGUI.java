@@ -188,7 +188,7 @@ public class MochaChipGUI {
             }
             if (cpu.getMemory().loadChip8File(filePath)) {
                 debugGUI.updateMemoryMap();
-                List<Instruction> instructionList = cpu.preFetchInstructions();
+                List<Instruction> instructionList = Instruction.preFetchInstructions(cpu);
                 debugGUI.setInstructionList(instructionList);
                 debugGUI.initInstructionTable();
                 startEmulation();

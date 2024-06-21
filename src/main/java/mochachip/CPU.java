@@ -2,7 +2,6 @@ package mochachip;
 
 import mochachip.gui.DebugGUI;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -30,10 +29,10 @@ public class CPU {
         running = true;
         int sleepTimeNanos = 0;
         long sleepTimeMillis = 1;
-        if (instructionList == null) {
-            preFetchInstructions();
-            printInstructionList(instructionList);
-        }
+//        if (instructionList == null) {
+//            preFetchInstructions();
+//            printInstructionList(instructionList);
+//        }
 
         while (running && !debugGUI.isStepMode()) {
             registers.update();
@@ -99,6 +98,13 @@ public class CPU {
         int byteCode = (byte1 << 8) | byte2;
         Instruction instruction = new Instruction(programCounter.getCurrentAddress(), byteCode);
         programCounter.incrementPC();
+        return instruction;
+    }
+
+    //Overload version to roll back PC if needed
+    public Instruction fetchInstruction(boolean incrementPC) {
+        Instruction instruction = fetchInstruction();
+        if (!incrementPC) programCounter.decrementPC(); // Roll back PC if we don't want to increase it
         return instruction;
     }
 
@@ -310,18 +316,6 @@ public class CPU {
         }
     }
 
-    //Get all instructions from the program as a list
-    public List<Instruction> preFetchInstructions() {
-        instructionList = new ArrayList<>();
-        while (programCounter.currentAddress < 4094) {
-            Instruction instruction = fetchInstruction();
-            if (instruction.validateInstruction()) {
-                instructionList.add(instruction);
-            }
-        }
-        programCounter.currentAddress = Memory.PROGRAM_START_ADDRESS;
-        return instructionList;
-    }
 
     public void printInstructionList(List<Instruction> instructions) {
         for (Instruction i : instructions) {

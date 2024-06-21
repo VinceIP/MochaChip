@@ -1,5 +1,10 @@
 package mochachip;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class Instruction {
     private final int byteCode;
     private int address;
@@ -13,9 +18,6 @@ public class Instruction {
 
     public Instruction(int address, int byteCode) {
         this.address = address;
-        if((this.address % 2 != 0)){
-            System.out.println(String.format("Middle of the road instr at addr %04X", this.address));
-        }
         this.byteCode = byteCode;
         parse();
     }
@@ -217,6 +219,41 @@ public class Instruction {
                 break;
         }
         return false; // If no valid instruction matched
+    }
+
+    //Get all instructions from the program as a list
+    public static List<Instruction> preFetchInstructions(CPU cpu) {
+        List<Instruction> instructionList = new ArrayList<>();
+        Set<Integer> visitedAddresses = new HashSet<>();
+
+        while (cpu.programCounter.currentAddress < 4094) {
+            Instruction instruction = cpu.fetchInstruction();
+
+            //Skip over any addresses that were already jumped to
+            if (visitedAddresses.contains(instruction.getAddress())) continue;
+            else visitedAddresses.add(instruction.getAddress());
+
+            //If this is a valid instruction, add it to the list
+            if (!instructionList.contains(instruction) && instruction.validateInstruction()) {
+                instructionList.add(instruction);
+            }
+
+            //If instruction is jump or call, jump to the address at nnn and roll back the PC
+            //Return to address on stack if return instruction
+            if (instruction.getByteCode() == 1) {
+                cpu.programCounter.currentAddress = instruction.getNNN();
+                if (cpu.programCounter.getCurrentAddress() > 1) cpu.programCounter.decrementPC();
+            } else if (instruction.getByteCode() == 2) {
+                cpu.stack.push(cpu.programCounter.currentAddress);
+                cpu.programCounter.currentAddress = instruction.getNNN();
+                if (cpu.programCounter.getCurrentAddress() > 1) cpu.programCounter.decrementPC();
+            } else if (instruction.getByteCode() == 0x00EE) {
+                if (!cpu.stack.isEmpty()) cpu.programCounter.currentAddress = cpu.stack.pop();
+            }
+        }
+        //Reset PC to where it belongs
+        cpu.programCounter.currentAddress = Memory.PROGRAM_START_ADDRESS;
+        return instructionList;
     }
 
 }
