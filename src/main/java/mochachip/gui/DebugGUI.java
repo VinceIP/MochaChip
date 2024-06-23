@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +50,6 @@ public class DebugGUI {
     }
 
     private void init() {
-
 
         //Init main panels
         memoryViewerPanel = new JPanel();
@@ -213,6 +214,20 @@ public class DebugGUI {
         frame.setResizable(true);
         frame.setPreferredSize(new Dimension(1024, 768));
         frame.pack();
+
+        frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                super.componentShown(e);
+                if(stepMode){
+                    stepModeCheckBox.setSelected(true);
+                    stepModeStepThroughButton.setEnabled(true);
+                } else{
+                    stepModeCheckBox.setSelected(false);
+                    stepModeStepThroughButton.setEnabled(false);
+                }
+            }
+        });
     }
 
     //Called by the CPU when register values are changed
@@ -394,7 +409,7 @@ public class DebugGUI {
     }
 
     //Toggle step mode when checkbox is clicked
-    private void toggleStepMode() {
+    public void toggleStepMode() {
         stepMode = !stepMode;
         if (!stepMode) {
             instructionViewerTable.setRowSelectionAllowed(true);

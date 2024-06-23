@@ -84,8 +84,7 @@ public class Instruction {
 
     //Returns true if the instruction's bytecode is a valid CHIP-8 instruction
     //Will need to modify for CHIP-8 extensions
-    //It's possible that a series of bytes meant to be sprite data could be read as valid instructions, but this should
-    //be okay enough - validation will stop the first time we encounter invalid instructions
+    //validation will stop the first time we encounter invalid instructions, indicating non-instruction data
     public boolean validateInstruction() {
         int opCode = getOpcode();
         int x = getNibble1();

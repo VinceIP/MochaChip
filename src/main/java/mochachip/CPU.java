@@ -61,8 +61,7 @@ public class CPU {
     }
 
     public void togglePause() {
-        if (running) running = false;
-        else running = true;
+        debugGUI.toggleStepMode();
     }
 
     public void reset() {
@@ -98,13 +97,6 @@ public class CPU {
         int byteCode = (byte1 << 8) | byte2;
         Instruction instruction = new Instruction(programCounter.getCurrentAddress(), byteCode);
         programCounter.incrementPC();
-        return instruction;
-    }
-
-    //Overload version to roll back PC if needed
-    public Instruction fetchInstruction(boolean incrementPC) {
-        Instruction instruction = fetchInstruction();
-        if (!incrementPC) programCounter.decrementPC(); // Roll back PC if we don't want to increase it
         return instruction;
     }
 
@@ -313,13 +305,6 @@ public class CPU {
 
             default:
                 throw new OpcodeUnimplementedException(instruction.getByteCode());
-        }
-    }
-
-
-    public void printInstructionList(List<Instruction> instructions) {
-        for (Instruction i : instructions) {
-            System.out.println(i.toString());
         }
     }
 

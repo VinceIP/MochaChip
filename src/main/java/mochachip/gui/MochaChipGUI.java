@@ -21,6 +21,8 @@ public class MochaChipGUI {
     private CPU cpu;
     Thread emulationThread;
     private JFrame frame;
+    private JMenuItem pauseItem;
+    private JMenuItem stopItem;
     private DebugGUI debugGUI;
 
 
@@ -62,9 +64,11 @@ public class MochaChipGUI {
         exitItem.addActionListener(e -> quit());
 
         //Emulation
-        JMenuItem pauseItem = new JMenuItem("Pause/Resume Emulation");
+        pauseItem = new JMenuItem("Pause/Resume Emulation");
+        pauseItem.setEnabled(false);
         pauseItem.addActionListener(e -> pauseEmulation());
-        JMenuItem stopItem = new JMenuItem("Stop Emulation");
+        stopItem = new JMenuItem("Stop Emulation");
+        stopItem.setEnabled(false);
         stopItem.addActionListener(e -> stopEmulation());
         JMenuItem optionsItem = new JMenuItem("Options");
 
@@ -196,6 +200,8 @@ public class MochaChipGUI {
         } else if (returnValue == JFileChooser.ERROR_OPTION) {
             JOptionPane.showMessageDialog(frame, "Failed to load CH8 file.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        pauseItem.setEnabled(true);
+        stopItem.setEnabled(true);
     }
 
     private void startEmulation() {
@@ -219,10 +225,12 @@ public class MochaChipGUI {
                 JOptionPane.showMessageDialog(frame, "Error occurred while halting emulation thread.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+        pauseItem.setEnabled(false);
+        stopItem.setEnabled(false);
     }
 
     private void pauseEmulation() {
-        cpu.togglePause();
+        debugGUI.setStepMode(true);
     }
 
     private void quit() {
