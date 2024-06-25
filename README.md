@@ -19,13 +19,33 @@ to the interpreter.
 
 Writing a CHIP-8 interpreter is often said to be a great way to get familiarized with emulator development and
 understanding low-level computer science concepts. That was my goal here. If you're getting started with programming,
-consider writing your own by getting familiar with CHIP-8's architecture (see resources below). It's best to not view anyone else's code until
+consider writing your own by getting familiar with CHIP-8's architecture (see resources below). It's best to not view
+anyone else's code until
 you've tried to get things working yourself.
 
 ## Releases and Usage
 
-Download the [latest release](https://github.com/VinceIP/MochaChip/releases/), extract the archive, and run the MochaChip
+Download the [latest release](https://github.com/VinceIP/MochaChip/releases/), extract the archive, and run the
+MochaChip
 JAR file. Requires [Java version 17](https://www.oracle.com/java/technologies/downloads/).
+
+## Changelog
+
+#### 0.2.0-alpha
+
+- Various code refactorings
+- Compatibility improvements - fixed bug instruction implementations. Should be working with nearly all original
+  CHIP-8 programs
+- Added a debugger menu to the GUI. Displays a map of the loaded CHIP-8 memory. Displays a realtime monitor of every
+  register and the stack as values are changed. Shows a pre-fetched list of all instructions found in the CHIP-8
+  program.
+  Currently running instructions are highlighted yellow. Step mode allows pausing the program and stepping through each
+  instruction one cycle at a time. Breakpoints TBD
+- Implemented pause and stop emulation menu options
+
+#### 0.1.0-alpha
+
+- Initial release
 
 ## Why Java?
 
@@ -94,18 +114,25 @@ Want to know more about CHIP-8, or are you writing an emulator of your own? Here
 As of writing, I've only been working on this project for a week or so. Thanks to this [incredibly well-written
 guide by Tobias V. Langhoff](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/), I've made a lot of progress in
 a short time. Langhoff's guide offers no code snippets and challenges you to implement logic yourself based on
-CHIP-8's criteria. A big takeaway I got from this is - it literally does not matter which programming language you choose
-to use for a project like this. I've seen a lot of posts on Reddit, mochachip.Stack Overflow and the like by beginners over the years
-who struggle with choosing a language for whatever project they want to work on. The more time you spend debating on which
-tools to use is less time you have to write code. This goes beyond the scope of writing a simple interpreter. I feel that
-modern machines have become fast enough to the point where you don't have to worry THAT much about performance and overhead.
-Pick what you're familiar with and what you enjoy using. For me right now, it's Java. If you're writing a 3D renderer from
+CHIP-8's criteria. A big takeaway I got from this is - it literally does not matter which programming language you
+choose
+to use for a project like this. I've seen a lot of posts on Reddit, mochachip.Stack Overflow and the like by beginners
+over the years
+who struggle with choosing a language for whatever project they want to work on. The more time you spend debating on
+which
+tools to use is less time you have to write code. This goes beyond the scope of writing a simple interpreter. I feel
+that
+modern machines have become fast enough to the point where you don't have to worry THAT much about performance and
+overhead.
+Pick what you're familiar with and what you enjoy using. For me right now, it's Java. If you're writing a 3D renderer
+from
 scratch or targeting mobile devices or web browsers, there's a little more room to debate which tools to use.
 
 That being said, let's talk about **Java and working with small numbers like bytes.** This is long and wordy but my hope
 is that it helps someone out who may discover this repo looking for solutions when debugging their own CHIP-8 emulator.
 
-Java is not C, and - oddly enough - it does not support unsigned data types at all. In other words, a Java primitive byte
+Java is not C, and - oddly enough - it does not support unsigned data types at all. In other words, a Java primitive
+byte
 has a signed range of -128 to 127. This is a problem for this project, because CHIP-8 handles all its operations using
 unsigned byte values (0-255). So if I'm decoding a CHIP-8 instruction that adds a value of 2 to register V5 which holds
 a value of 255, we expect the result to be 1, because exceeding that signed byte limit of 255 wraps the result back to
@@ -127,12 +154,15 @@ The solution to this problem is bitmasking. Any time I want to perform math on m
 an 8-bit unsigned value back into my register.
 
 For example, say you are emulating CHIP-8's ADD instruction and you have a simple function like this:
+
 ```
 public void addByte(int x, int nn){
 
 }
 ```
+
 where int 'x' is the specific register you are adding byte value 'nn' to. For safety, we cannot simply say
+
 ```
 x += nn
 ```
@@ -142,6 +172,7 @@ and counts up if the range is exceeded). In fact, we want this behavior. That wo
 we are using ints that have a limit far beyond what a byte does. We're using ints as parameters because, as I said,
 Java will convert a byte to an int behind the scenes anyway when we do math. We're simply going to convert everything
 back to 8-bit unsigned values before storing them back into the register 'x'. We do it like this:
+
 ```
 public void addByte(int x, int nn){
     int vx = registers.variableRegisters[x] & 0xFF;
@@ -158,7 +189,8 @@ Let me explain this line-by-line.
 ```
 
 Create a new int 'vx' to store the value that is currently held in register x. I have my registers in a class separate
-from the mochachip.CPU and access them like this. We do a logical AND with the hex value 0xFF or 11111111 in binary. This is called
+from the mochachip.CPU and access them like this. We do a logical AND with the hex value 0xFF or 11111111 in binary.
+This is called
 bitmasking, or extracting only the bits you want from a number. In our case, we don't really know for sure what is
 hiding in register 'x'. I know that my registers are a byte[] array, but I don't necessarily know that Java hasn't put
 negative numbers in there at some point. By doing a logical AND with 0xFF, we tell Java to just give us back 8 raw
@@ -182,10 +214,12 @@ Add the two values, while again restricting them to 1 byte unsigned.
     registers.variableRegisters[x] = (byte)result;
 ```
 
-Now that we know our result is in the range we want, we can cast it down to a byte and put it back into the register 'x'.
-Note that we don't need to and should not refer to memory addresses or register/array indices with bitmasked unsigned values.
+Now that we know our result is in the range we want, we can cast it down to a byte and put it back into the register '
+x'.
+Note that we don't need to and should not refer to memory addresses or register/array indices with bitmasked unsigned
+values.
 
 Believe me when I tell you it took me entirely too long to understand this important quirk of Java and why I was seeing
 strange and incorrect outputs from my code. Follow this bitmasking rule whenever you are **specifically expecting 8-bit,
-unsigned values** from any operation. You can write a function to unsign a value if you want, but I find just adding 
+unsigned values** from any operation. You can write a function to unsign a value if you want, but I find just adding
 & 0xFF where I need to is just as well.
