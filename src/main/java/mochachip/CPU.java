@@ -10,7 +10,6 @@ public class CPU {
     Memory memory;
     ProgramCounter programCounter;
     Registers registers;
-    Timer timer;
     Input input;
     Stack stack;
     Display display;
@@ -29,10 +28,6 @@ public class CPU {
         running = true;
         int sleepTimeNanos = 0;
         long sleepTimeMillis = 1;
-//        if (instructionList == null) {
-//            preFetchInstructions();
-//            printInstructionList(instructionList);
-//        }
 
         while (running && !debugGUI.isStepMode()) {
             registers.update();
@@ -69,7 +64,6 @@ public class CPU {
         this.stack = new Stack();
         this.programCounter = new ProgramCounter();
         this.registers = new Registers();
-        this.timer = new Timer();
     }
 
     public void prepareCycle() {

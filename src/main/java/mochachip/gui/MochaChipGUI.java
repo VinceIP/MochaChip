@@ -53,9 +53,8 @@ public class MochaChipGUI {
         JMenu fileMenu = new JMenu("File");
         JMenu emulationMenu = new JMenu("Emulation");
         JMenu displayMenu = new JMenu("Display");
-        JMenu settingsMenu = new JMenu("Settings");
+        //JMenu settingsMenu = new JMenu("Settings");
         JMenu debuggerMenu = new JMenu("Debugger");
-        JMenu aboutMenu = new JMenu("About");
 
         //File
         JMenuItem loadRomItem = new JMenuItem("Load CH8 file");
@@ -70,7 +69,7 @@ public class MochaChipGUI {
         stopItem = new JMenuItem("Stop Emulation");
         stopItem.setEnabled(false);
         stopItem.addActionListener(e -> stopEmulation());
-        JMenuItem optionsItem = new JMenuItem("Options");
+        // optionsItem = new JMenuItem("Options");
 
         //mochachip.Display
         //Size
@@ -96,21 +95,19 @@ public class MochaChipGUI {
         JMenuItem colorPastel = new JMenuItem("Pastel");
 
         //Settings
-        JMenuItem settingsItem = new JMenuItem("Open settings");
+        //JMenuItem settingsItem = new JMenuItem("Open settings");
 
         //Debugger
         JMenuItem debuggerItem = new JMenuItem("Open Debugger");
         debuggerItem.addActionListener(e -> openDebugger());
 
-        //About
-        JMenuItem aboutItem = new JMenuItem("About Chip8Emulator");
 
         fileMenu.add(loadRomItem);
         fileMenu.add(exitItem);
 
         emulationMenu.add(pauseItem);
         emulationMenu.add(stopItem);
-        emulationMenu.add(optionsItem);
+        //emulationMenu.add(optionsItem);
 
         displayMenu.add(windowSize);
         displayMenu.add(colorMenu);
@@ -137,19 +134,16 @@ public class MochaChipGUI {
         colorMenu.add(colorPastel);
         colorPastel.addActionListener(e -> display.setColorTheme(ColorTheme.Chip8Color.PASTEL));
 
-        settingsMenu.add(settingsItem);
+        //settingsMenu.add(settingsItem);
 
         debuggerMenu.add(debuggerItem);
         debuggerItem.addActionListener(e -> openDebugger());
 
-        aboutMenu.add(aboutItem);
-
         menuBar.add(fileMenu);
         menuBar.add(emulationMenu);
         menuBar.add(displayMenu);
-        menuBar.add(settingsMenu);
+        //menuBar.add(settingsMenu);
         menuBar.add(debuggerMenu);
-        menuBar.add(aboutMenu);
 
         frame.setJMenuBar(menuBar);
     }

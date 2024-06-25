@@ -219,10 +219,10 @@ public class DebugGUI {
             @Override
             public void componentShown(ComponentEvent e) {
                 super.componentShown(e);
-                if(stepMode){
+                if (stepMode) {
                     stepModeCheckBox.setSelected(true);
                     stepModeStepThroughButton.setEnabled(true);
-                } else{
+                } else {
                     stepModeCheckBox.setSelected(false);
                     stepModeStepThroughButton.setEnabled(false);
                 }
@@ -459,6 +459,7 @@ public class DebugGUI {
     public void setStepMode(boolean val) {
         this.stepMode = val;
         stepModeCheckBox.setSelected(val);
+        stepModeStepThroughButton.setEnabled(true);
     }
 
     public Instruction getCurrentInstruction() {
