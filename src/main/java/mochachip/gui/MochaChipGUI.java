@@ -5,6 +5,8 @@ import mochachip.*;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +32,7 @@ public class MochaChipGUI {
     private JLabel speedLabel;
     private JSlider speedSlider;
     private DebugGUI debugGUI;
+    private boolean wasInStepMode;
 
 
     public MochaChipGUI(Input input, Display display, CPU cpu) {
@@ -80,12 +83,30 @@ public class MochaChipGUI {
         speedMenu.setEnabled(true);
         JPanel speedPanel = new JPanel();
         speedPanel.setLayout(new BoxLayout(speedPanel, BoxLayout.Y_AXIS));
-        speedSlider = new JSlider(JSlider.HORIZONTAL, MIN_SPEED,MAX_SPEED,DEFAULT_SPEED);
+        speedSlider = new JSlider(JSlider.HORIZONTAL, MIN_SPEED, MAX_SPEED, DEFAULT_SPEED);
         speedPanel.add(speedSlider);
         speedSlider.setMajorTickSpacing(100);
         speedSlider.setSnapToTicks(true);
         speedSlider.setValue(DEFAULT_SPEED);
         speedSlider.setEnabled(true);
+        speedSlider.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (!debugGUI.isStepMode()) {
+                    debugGUI.toggleStepMode();
+                    wasInStepMode = false;
+                } else {
+                    wasInStepMode = true;
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (!wasInStepMode) {
+                    debugGUI.toggleStepMode();
+                }
+            }
+        });
         speedSlider.addChangeListener(l -> adjustSpeed());
         speedLabel = new JLabel("Cycles per second: " + DEFAULT_SPEED);
         speedPanel.add(speedLabel);
@@ -169,11 +190,11 @@ public class MochaChipGUI {
         frame.setJMenuBar(menuBar);
     }
 
-    private void adjustSpeed(){
+    private void adjustSpeed() {
         currentSpeed = speedSlider.getValue();
         speedLabel.setText("Cycles per second: " + currentSpeed);
+        cpu.setCyclesPerSecond(currentSpeed);
     }
-
 
 
     private void loadRom() {
@@ -190,7 +211,7 @@ public class MochaChipGUI {
             stopEmulation();
             display.reset();
             input.reset();
-            cpu = new CPU(input, display);
+            cpu = new CPU(input, display, currentSpeed);
             cpu.reset();
             boolean wasOpen = false;
             boolean wasStepMode = false;

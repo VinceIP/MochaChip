@@ -4,12 +4,13 @@ import mochachip.gui.DebugGUI;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.locks.LockSupport;
 
 public class CPU {
     private volatile boolean running = false;
 
     private int cyclesPerSecond;
-    private final int DEFAULT_SPEED = 500;
+    private static final int DEFAULT_SPEED = 500;
     private long frameTime;
     Memory memory;
     ProgramCounter programCounter;
@@ -29,17 +30,20 @@ public class CPU {
         setCyclesPerSecond(DEFAULT_SPEED);
     }
 
+    public CPU(Input input, Display display, int speed) {
+        this.display = display;
+        this.input = input;
+        setCyclesPerSecond(speed);
+    }
+
     public void start() {
         running = true;
         long timePerCycle = 1_000_000_000L / cyclesPerSecond; //Time each cycle should take up to reach desired speed
         long nextCycleTime = System.nanoTime();
 
         while (running && debugGUI != null && !debugGUI.isStepMode()) {
-            System.out.println("timePerCycle: " + timePerCycle);
-            System.out.println("nextCycleTime: " + nextCycleTime);
-
             long currentTime = System.nanoTime();
-            if(currentTime >= nextCycleTime){
+            if (currentTime >= nextCycleTime) {
                 registers.update();
                 if (!waitingForKeyPress) {
                     prepareCycle();
@@ -55,14 +59,11 @@ public class CPU {
                 nextCycleTime += timePerCycle;
             }
 
-            long sleepTime = (nextCycleTime - System.nanoTime()) / 1_000_000; // Convert to milliseconds
-            System.out.println("sleepTime: " + sleepTime);
-            if(sleepTime > 0){
-                try{
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e){
-                    //Interruption
-                }
+            //long sleepTime = (nextCycleTime - System.nanoTime()) / 1_000_000; // Convert to milliseconds
+            long sleepTime = nextCycleTime - currentTime;
+            if (sleepTime > 0) {
+                //Thread.sleep(sleepTime);
+                LockSupport.parkNanos(sleepTime);
             }
         }
     }
