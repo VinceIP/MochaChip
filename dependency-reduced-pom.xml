@@ -3,12 +3,15 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.mochachip</groupId>
   <artifactId>MochaChip</artifactId>
-  <version>0.2.0-alpha</version>
+  <version>0.2.1-alpha</version>
   <build>
     <resources>
       <resource>
         <filtering>true</filtering>
         <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>*.wav</exclude>
+        </excludes>
       </resource>
     </resources>
     <plugins>

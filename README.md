@@ -31,6 +31,10 @@ JAR file. Requires [Java version 17](https://www.oracle.com/java/technologies/do
 
 ## Changelog
 
+#### 0.2.1-alpha
+- More accurate cycle timing (default 500 CPU cycles per second)
+- Added speed adjustment feature to GUI, providing a range of 1 to 1000 cycles per second.
+
 #### 0.2.0-alpha
 
 - Various code refactorings
