@@ -7,6 +7,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class CPU {
     private volatile boolean running = false;
+
+    private int cyclesPerSecond;
+    private final int DEFAULT_SPEED = 500;
+    private long frameTime;
     Memory memory;
     ProgramCounter programCounter;
     Registers registers;
@@ -22,30 +26,43 @@ public class CPU {
     public CPU(Input input, Display display) {
         this.display = display;
         this.input = input;
+        setCyclesPerSecond(DEFAULT_SPEED);
     }
 
     public void start() {
         running = true;
-        int sleepTimeNanos = 0;
-        long sleepTimeMillis = 1;
+        long timePerCycle = 1_000_000_000L / cyclesPerSecond; //Time each cycle should take up to reach desired speed
+        long nextCycleTime = System.nanoTime();
 
-        while (running && !debugGUI.isStepMode()) {
-            registers.update();
-            if (!waitingForKeyPress) {
-                prepareCycle();
-                cycle();
-            } else {
-                if (input.isAnyKeyPressed()) {
-                    registers.variableRegisters[waitingRegister] = (byte) input.getLastKeyPressed();
-                    input.resetLastKeyPressed();
-                    waitingForKeyPress = false;
-                    waitingRegister = -1;
+        while (running && debugGUI != null && !debugGUI.isStepMode()) {
+            System.out.println("timePerCycle: " + timePerCycle);
+            System.out.println("nextCycleTime: " + nextCycleTime);
+
+            long currentTime = System.nanoTime();
+            if(currentTime >= nextCycleTime){
+                registers.update();
+                if (!waitingForKeyPress) {
+                    prepareCycle();
+                    cycle();
+                } else {
+                    if (input.isAnyKeyPressed()) {
+                        registers.variableRegisters[waitingRegister] = (byte) input.getLastKeyPressed();
+                        input.resetLastKeyPressed();
+                        waitingForKeyPress = false;
+                        waitingRegister = -1;
+                    }
                 }
+                nextCycleTime += timePerCycle;
             }
-            try {
-                Thread.sleep(sleepTimeMillis, sleepTimeNanos);
-            } catch (InterruptedException e) {
-                //
+
+            long sleepTime = (nextCycleTime - System.nanoTime()) / 1_000_000; // Convert to milliseconds
+            System.out.println("sleepTime: " + sleepTime);
+            if(sleepTime > 0){
+                try{
+                    Thread.sleep(sleepTime);
+                } catch (InterruptedException e){
+                    //Interruption
+                }
             }
         }
     }
@@ -68,8 +85,7 @@ public class CPU {
 
     public void prepareCycle() {
         currentInstruction = fetchInstruction();
-        this.currentInstruction = currentInstruction;
-        if (debugGUI.getFrame().isVisible()) {
+        if (debugGUI != null && debugGUI.getFrame().isVisible()) {
             debugGUI.setCurrentInstruction(currentInstruction);
         }
     }
@@ -80,7 +96,7 @@ public class CPU {
 
     //Fetch a 2-byte instruction at address in memory
     public Instruction fetchInstruction() {
-        if (programCounter.getCurrentAddress() < 0 || programCounter.getCurrentAddress() >= 4096) {
+        if (programCounter.getCurrentAddress() < 0 || programCounter.getCurrentAddress() >= 4095) {
             throw new IllegalArgumentException("ERROR: Program counter out of bounds.");
         }
 
@@ -100,6 +116,9 @@ public class CPU {
         int opCode = instruction.getOpcode();
         int x = instruction.getNibble1();
         int y = instruction.getNibble2();
+        if (x < 0 || x > 0xF || y < 0 || y > 0xF) {
+            throw new IllegalArgumentException("Register index out of bounds.");
+        }
         int n = instruction.getNibble3();
         int nn = instruction.getNN();
         int nnn = instruction.getNNN();
@@ -396,9 +415,8 @@ public class CPU {
 
     public void addI(int x) {
         int vx = registers.variableRegisters[x] & 0xFF;
-        int i = registers.indexRegister & 0xFFF; //Index register is a 12-bit value!
-        registers.indexRegister = (vx + i) & 0xFFF; //Mask the result to 12 bits
-        registers.setIndexRegister(vx + i);
+        //int i = registers.indexRegister & 0xFFF; //Index register is a 12-bit value!
+        registers.setIndexRegister(registers.getIndexRegister() + vx);
     }
 
     public void subWithCarry(int x, int y) {
@@ -475,7 +493,7 @@ public class CPU {
 
     public void ldFontDigit(int x) {
         int digit = registers.variableRegisters[x] & 0xFF;
-        registers.setIndexRegister(memory.getAddressOfDigit(digit) & 0xFF);
+        registers.setIndexRegister(memory.getAddressOfDigit(digit));
     }
 
     public void ldBCD(int x) {
@@ -530,7 +548,7 @@ public class CPU {
     }
 
     public void rnd(int x, int nn) {
-        int rand = ThreadLocalRandom.current().nextInt(0, 255) & 0xFF;
+        int rand = ThreadLocalRandom.current().nextInt(0, 256) & 0xFF;
         int val = nn & 0xFF;
         int result = (rand & val) & 0xFF;
         registers.setVariableRegister(x, result);
@@ -556,12 +574,24 @@ public class CPU {
         return registers;
     }
 
+    public int getCyclesPerSecond() {
+        return cyclesPerSecond;
+    }
+
+    public void setCyclesPerSecond(int cyclesPerSecond) {
+        this.cyclesPerSecond = cyclesPerSecond;
+    }
+
     public void setDebugGUI(DebugGUI debugGUI) {
         //Pass debugGUI to this, plus Registers, which will tell debugGUI when to update register view
         this.debugGUI = debugGUI;
         this.registers.setDebugGUI(debugGUI);
         this.stack.setDebugGUI(debugGUI);
         this.programCounter.setDebugGUI(debugGUI);
+    }
+
+    public long getFrameTime() {
+        return frameTime;
     }
 
     public DebugGUI getDebugGUI() {
@@ -571,6 +601,6 @@ public class CPU {
 
 class OpcodeUnimplementedException extends RuntimeException {
     public OpcodeUnimplementedException(int instruction) {
-        System.out.println("ERROR: Instruction " + instruction + " unimplemented.");
+        super("ERROR: Instruction " + instruction + " unimplemented.");
     }
 }

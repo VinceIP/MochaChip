@@ -14,6 +14,10 @@ import java.util.Properties;
 
 public class MochaChipGUI {
     static final public String title = "MochaChip";
+    private final int MIN_SPEED = 100;
+    private final int MAX_SPEED = 1000;
+    private final int DEFAULT_SPEED = 500;
+    private int currentSpeed;
     private String version;
     private String lastPathUsed;
     private Input input;
@@ -23,6 +27,8 @@ public class MochaChipGUI {
     private JFrame frame;
     private JMenuItem pauseItem;
     private JMenuItem stopItem;
+    private JLabel speedLabel;
+    private JSlider speedSlider;
     private DebugGUI debugGUI;
 
 
@@ -43,6 +49,7 @@ public class MochaChipGUI {
         frame.add(display, BorderLayout.CENTER);
         initMenu();
         frame.pack();
+        currentSpeed = DEFAULT_SPEED;
     }
 
 
@@ -69,9 +76,22 @@ public class MochaChipGUI {
         stopItem = new JMenuItem("Stop Emulation");
         stopItem.setEnabled(false);
         stopItem.addActionListener(e -> stopEmulation());
+        JMenu speedMenu = new JMenu("Speed");
+        speedMenu.setEnabled(true);
+        JPanel speedPanel = new JPanel();
+        speedPanel.setLayout(new BoxLayout(speedPanel, BoxLayout.Y_AXIS));
+        speedSlider = new JSlider(JSlider.HORIZONTAL, MIN_SPEED,MAX_SPEED,DEFAULT_SPEED);
+        speedPanel.add(speedSlider);
+        speedSlider.setMajorTickSpacing(100);
+        speedSlider.setSnapToTicks(true);
+        speedSlider.setValue(DEFAULT_SPEED);
+        speedSlider.setEnabled(true);
+        speedSlider.addChangeListener(l -> adjustSpeed());
+        speedLabel = new JLabel("Cycles per second: " + DEFAULT_SPEED);
+        speedPanel.add(speedLabel);
         // optionsItem = new JMenuItem("Options");
 
-        //mochachip.Display
+
         //Size
         JMenu windowSize = new JMenu("Size");
         JMenuItem windowSize1x = new JMenuItem("1");
@@ -107,7 +127,8 @@ public class MochaChipGUI {
 
         emulationMenu.add(pauseItem);
         emulationMenu.add(stopItem);
-        //emulationMenu.add(optionsItem);
+        emulationMenu.add(speedMenu);
+        speedMenu.add(speedPanel);
 
         displayMenu.add(windowSize);
         displayMenu.add(colorMenu);
@@ -147,6 +168,13 @@ public class MochaChipGUI {
 
         frame.setJMenuBar(menuBar);
     }
+
+    private void adjustSpeed(){
+        currentSpeed = speedSlider.getValue();
+        speedLabel.setText("Cycles per second: " + currentSpeed);
+    }
+
+
 
     private void loadRom() {
         JFileChooser fileChooser = new JFileChooser();
@@ -224,7 +252,7 @@ public class MochaChipGUI {
     }
 
     private void pauseEmulation() {
-        debugGUI.setStepMode(true);
+        debugGUI.toggleStepMode();
     }
 
     private void quit() {
